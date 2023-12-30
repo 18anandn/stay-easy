@@ -1,15 +1,17 @@
 import {
   IsDate,
+  IsInt,
   IsLatLong,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  Min,
 } from 'class-validator';
 
 export class FindHotelDto {
   @IsLatLong()
-  @IsNotEmpty()
+  @IsOptional()
   latlng: string;
 
   @IsNumber(
@@ -30,4 +32,13 @@ export class FindHotelDto {
   @IsString({ each: true })
   @IsOptional()
   amenities: string;
+
+  @IsString()
+  @IsOptional()
+  address: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page: number;
 }

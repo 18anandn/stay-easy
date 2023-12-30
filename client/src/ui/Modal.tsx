@@ -15,6 +15,8 @@ const ModalStyles = createGlobalStyle`
     bottom: 0;
     opacity: 0;
     transition: opacity ${closeTimeOut}ms ${transitionStyle}, backdrop-filter ${closeTimeOut}ms ${transitionStyle};
+    display: flex;
+    overflow: auto;
   }
 
   .Modal-Overlay-Open {
@@ -27,20 +29,34 @@ const ModalStyles = createGlobalStyle`
   }
 
   .Modal-Content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    width: min-content;
+    margin: auto;
+    pointer-events: none;
+    border: none;
+    outline: none;
+
+    & > * {
+      pointer-events: all;
+    }
+    
+    .modal-box {
+      margin: 50px;
+      border: none;
+    outline: none;
+    }
   }
-`;
+
+  .ReactModal__Body--open {
+    overflow: hidden;
+  }
+  `;
 
 const ContentContainer = styled.div`
   padding: 2.5rem;
   background-color: white;
   position: relative;
+  border-radius: 1rem;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 
   .close-button {
     position: absolute;
@@ -79,10 +95,11 @@ const Modal: React.FC<Props> = ({
       <ModalStyles />
       <ReactModal
         isOpen={isModalOpen}
+        shouldCloseOnEsc={true}
         parentSelector={() => document.body}
         preventScroll={true}
         onRequestClose={() => {
-          if(closable) {
+          if (closable) {
             setIsModalOpen(false);
           }
         }}
@@ -98,18 +115,20 @@ const Modal: React.FC<Props> = ({
           beforeClose: 'Modal-Content-Close',
         }}
       >
-        <ContentContainer>
-          {closable && (
-            <button
-              className="close-button"
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-            >
-              &times;
-            </button>
-          )}
-          {children}
-        </ContentContainer>
+        <div className="modal-box">
+          <ContentContainer>
+            {closable && (
+              <button
+                className="close-button"
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+              >
+                &times;
+              </button>
+            )}
+            {children}
+          </ContentContainer>
+        </div>
       </ReactModal>
     </>
   );

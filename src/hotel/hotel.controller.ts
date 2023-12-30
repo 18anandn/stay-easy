@@ -5,7 +5,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseFilePipe,
   Patch,
   Post,
   Query,
@@ -39,7 +38,7 @@ export class HotelController {
     return this.hotelService.getHotels(page);
   }
 
-  @Get('findNearestHotels')
+  @Get('/findNearestHotels')
   findHotel(@Query() params: FindHotelDto) {
     return this.hotelService.findHotel(params);
   }

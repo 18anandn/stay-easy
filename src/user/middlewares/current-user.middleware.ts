@@ -30,8 +30,8 @@ export class CurrentUserMiddleware implements NestMiddleware {
         if (!user) {
           throw new Error('No user found');
         }
-        const { id: userId, name, email, role } = user;
-        req.user = { userId, name, email, role };
+        const { id: userId, email, role } = user;
+        req.user = { userId, email, role };
       } catch (error) {
         res.cookie('token', null, {
           path: '/',

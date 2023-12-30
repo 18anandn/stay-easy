@@ -13,22 +13,24 @@ import CustomMapContainer from '../features/map/CustomMap';
 import { LeafletMouseEvent, LeafletMouseEventHandlerFn } from 'leaflet';
 import ClickEvent from '../features/map/ClickEvent';
 import { pinIcon } from '../features/map/pinIcon';
-import SidebarNav from '../features/map/SidebarNav';
 import Input from '../ui/inputs/Input';
 import SearchBox from '../ui/inputs/SearchInput';
 import { FieldValues, SubmitHandler } from 'react-hook-form';
 import { RectBounds, SearchInputFields } from '../commonDataTypes';
 import FitOnMap from '../features/map/FitOnMap';
+import { useFormAction } from 'react-router-dom';
+import Explore from './Explore';
 
 const StyledMapSearch = styled.div`
-  height: 100dvh;
-  display: flex;
+  padding-top: 1.5rem;
+  /* height: 100%; */
+  display: grid;
+  grid-template-columns: 2fr 1fr;
 `;
 
 const StyledSearchContainer = styled.div`
-  height: 100%;
-  width: 40%;
-  display: flex;
+  /* height: 100%; */
+  /* display: flex; */
 `;
 
 const Box = styled.div`
@@ -49,8 +51,7 @@ const MapSearch: React.FC = () => {
   return (
     <StyledMapSearch>
       <StyledSearchContainer>
-        <SidebarNav />
-        <Box>{/* <SearchBox onSubmit={onSearch} /> */}</Box>
+        
       </StyledSearchContainer>
       <CustomMapContainer>
         <FitOnMap corners={Maharashtra} />

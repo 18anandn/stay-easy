@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { HotelPage, getHotels } from '../../apis/hotel';
+import { TripPage, getTrips } from '../../apis/booking';
 
-const useGetHotels = () => {
+export const useGetTrips = () => {
   const {
     data,
     fetchNextPage,
@@ -9,10 +9,10 @@ const useGetHotels = () => {
     isFetching,
     isFetchingNextPage,
     hasNextPage,
-  } = useInfiniteQuery<any, any, HotelPage>({
-    queryKey: ['hotels-data'],
+  } = useInfiniteQuery<any, any, TripPage>({
+    queryKey: ['trips'],
     queryFn: ({ pageParam = 1 }) => {
-      return getHotels(pageParam);
+      return getTrips(pageParam);
     },
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.totalPages > allPages.length
@@ -31,5 +31,3 @@ const useGetHotels = () => {
     hasNextPage,
   };
 };
-
-export default useGetHotels;

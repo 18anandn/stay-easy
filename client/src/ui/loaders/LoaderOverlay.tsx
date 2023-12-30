@@ -11,8 +11,7 @@ const Overlay = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: black;
-  opacity: 0.4;
+  background-color: rgba(0, 0, 0, 0.5);
   font-size: 20dvh;
 `;
 

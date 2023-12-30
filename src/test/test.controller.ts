@@ -1,4 +1,6 @@
 import { PageParam } from '../dtos/page-params.dto';
+import { CurrentUser } from '../user/decorators/current-user.decorator';
+import { CurrentUserDto } from '../user/dtos/current-user.dto';
 import { TestService } from './test.service';
 import { Controller, Get, Query } from '@nestjs/common';
 
@@ -17,7 +19,7 @@ export class TestController {
   }
 
   @Get('uploadData')
-  uploadData() {
-    return this.testService.uploadData();
+  uploadData(@CurrentUser() user: CurrentUserDto) {
+    return this.testService.uploadData(user);
   }
 }

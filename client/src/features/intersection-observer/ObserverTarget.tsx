@@ -6,20 +6,25 @@ type StyleProps = {
 };
 
 const StyledObserverTarget = styled.div<StyleProps>`
-  ${(props) => {
-    if (!props.$show) {
-      return css`
-        display: none;
-      `;
-    }
-  }}
   pointer-events: none;
   position: absolute;
-  height: 200dvh;
+  height: 600px;
   left: 0;
   right: 0;
   bottom: 0;
   /* background-color: rgb(128, 128, 128, 0.5); */
+
+  div {
+    height: 100%;
+    width: 100%;
+    ${(props) => {
+      if (!props.$show) {
+        return css`
+          display: none;
+        `;
+      }
+    }}
+  }
 `;
 
 type Props = {
@@ -27,7 +32,11 @@ type Props = {
 };
 
 const ObserverTarget = forwardRef<HTMLDivElement, Props>(({ show }, ref) => {
-  return <StyledObserverTarget ref={ref} $show={show}></StyledObserverTarget>;
+  return (
+    <StyledObserverTarget $show={show}>
+      <div ref={ref}></div>
+    </StyledObserverTarget>
+  );
 });
 
 export default ObserverTarget;

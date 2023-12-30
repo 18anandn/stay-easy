@@ -4,7 +4,9 @@ import { MouseEventHandler } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoaderOverlay from '../../ui/loaders/LoaderOverlay';
 
-const StyledLogoutButton = styled.button``;
+const StyledLogoutButton = styled.button`
+  cursor: pointer;
+`;
 
 interface Props {
   asType?: string;

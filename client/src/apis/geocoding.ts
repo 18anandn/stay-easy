@@ -16,7 +16,7 @@ export const getLocation = async (address: string): Promise<GeoCodingData> => {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new ServerError('There was an error during search', res.status);
+    throw new ServerError(data.message ?? 'There was an error during search', res.status);
   }
 
   return data;

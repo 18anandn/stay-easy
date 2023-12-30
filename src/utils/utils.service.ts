@@ -83,11 +83,11 @@ export class UtilsService {
         .andWhere(
           new Brackets((qb2) => {
             qb2.where(
-              'booking.from_date <=:book_from AND booking.to_date >= :book_from',
+              'booking.from_date <=:book_from AND booking.to_date > :book_from',
               { book_from },
             );
             qb2.orWhere(
-              'booking.from_date <= :book_to AND booking.to_date >= :book_to',
+              'booking.from_date < :book_to AND booking.to_date >= :book_to',
               { book_to },
             );
             qb2.orWhere(

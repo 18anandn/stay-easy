@@ -41,8 +41,6 @@ const StyledCreateHotel = styled.div`
   }
 
   .styled-input {
-    width: 100%;
-    font-size: 1rem;
     box-shadow:
       rgba(17, 17, 26, 0.05) 0px 1px 0px,
       rgba(17, 17, 26, 0.1) 0px 0px 8px;
@@ -56,6 +54,7 @@ const GridLayout = styled.div`
 
 type GridCellProps = {
   $fileCell?: boolean;
+  $noteCell?: boolean;
 };
 
 const GridCell = styled.div.attrs({ className: 'grid-cell' })<GridCellProps>`
@@ -83,6 +82,19 @@ const GridCell = styled.div.attrs({ className: 'grid-cell' })<GridCellProps>`
         padding-top: 0;
         padding-bottom: 0;
         grid-column: 2 / 2;
+      `;
+    }
+    if (props.$noteCell) {
+      return css`
+        min-height: 0;
+        grid-column: 1 / -1;
+        p {
+          margin: auto;
+          padding: 1rem;
+          font-size: 1rem;
+          background-color: #fffaa0;
+          border-radius: 10px;
+        }
       `;
     }
   }}
@@ -118,12 +130,6 @@ const CreateHotel: React.FC = () => {
     },
   });
 
-  const cabinAmountRef = useRef<HTMLInputElement>(
-    document.createElement('input'),
-  );
-  const cabinCapacityRef = useRef<HTMLInputElement>(
-    document.createElement('input'),
-  );
   const mainImageRef = useRef<HTMLInputElement>(
     document.createElement('input'),
   );
@@ -199,7 +205,9 @@ const CreateHotel: React.FC = () => {
               />
             </GridCell>
             <GridCell>
-              <Label>Price</Label>
+              <Label>
+                Price (&#8377;) <Asterisk />
+              </Label>
             </GridCell>
             <GridCell>
               <Input
@@ -223,13 +231,45 @@ const CreateHotel: React.FC = () => {
             </GridCell>
             <GridCell>
               <Label>
+                Price per Guest (&#8377;) <Asterisk />
+              </Label>
+            </GridCell>
+            <GridCell>
+              <Input
+                type="number"
+                id="price_per_guest"
+                defaultValue={1}
+                {...register('price_per_guest', {
+                  onChange: () => {
+                    const val = getValues('price_per_guest');
+                    const num = parseFloat(val);
+                    if (val.length === 0 || isNaN(num)) {
+                      return;
+                    }
+                    const arr = val.split('.');
+                    if (arr.length === 2) {
+                      setValue(
+                        'price_per_guest',
+                        `${arr[0]}.${arr[1].slice(0, 2)}`,
+                      );
+                    }
+                  },
+                })}
+              />
+            </GridCell>
+            <GridCell $noteCell={true}>
+              <p>
+                Note: 5% of the total price will be charged additionaly by StayEasy.
+              </p>
+            </GridCell>
+            <GridCell>
+              <Label>
                 Number of cabins <Asterisk />
               </Label>
             </GridCell>
             <GridCell>
               <InputCounter
                 name="cabin_amount"
-                ref={cabinAmountRef}
                 min={1}
                 max={20}
                 onValChange={(val) => {
@@ -243,7 +283,6 @@ const CreateHotel: React.FC = () => {
             <GridCell>
               <InputCounter
                 name="cabin_capacity"
-                ref={cabinCapacityRef}
                 min={1}
                 max={20}
                 onValChange={(val) => {

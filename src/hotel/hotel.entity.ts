@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Generated,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -23,7 +24,14 @@ export class Hotel {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 20, nullable: false })
+  @Generated('increment')
+  @Column('bigint')
+  number: string;
+
+  @Column({ type: 'boolean', default: false })
+  is_sample: boolean;
+
+  @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;
 
   @Column({
@@ -34,8 +42,11 @@ export class Hotel {
   })
   location: Point;
 
-  @Column({ type: 'money', nullable: false })
+  @Column({ type: 'decimal', nullable: false })
   price: number;
+
+  @Column({ type: 'decimal', nullable: false })
+  price_per_guest: number;
 
   @Column({ type: 'varchar', length: 35, nullable: false })
   city: string;
@@ -74,7 +85,7 @@ export class Hotel {
   @Column({ type: 'uuid', nullable: true })
   main_image_id: string;
 
-  @ManyToMany(() => S3File)
+  @ManyToMany(() => S3File, { onDelete: 'CASCADE' })
   @JoinTable({
     name: 'hotel_images',
     joinColumn: {

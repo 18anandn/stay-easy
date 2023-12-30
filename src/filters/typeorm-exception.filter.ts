@@ -13,6 +13,7 @@ export class TypeORMExceptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: QueryFailedError, host: ArgumentsHost): void {
+    console.log(exception)
     // In certain situations `httpAdapter` might not be available in the
     // constructor method, thus we should resolve it here.
     const { httpAdapter } = this.httpAdapterHost;

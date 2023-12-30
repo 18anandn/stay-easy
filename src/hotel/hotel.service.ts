@@ -1,4 +1,7 @@
-import { GeocodingService } from './../geocoding/geocoding.service';
+import {
+  GeocodingService,
+  LocationDetails,
+} from './../geocoding/geocoding.service';
 import { UpdateHotelDto } from './dtos/update-hotel.dto';
 import { UtilsService } from 'src/utils/utils.service';
 import {
@@ -20,7 +23,6 @@ import { Cabin } from '../cabin/cabin.entity';
 import { Amenity } from '../amenity/amenity.entity';
 import { UploadService } from '../upload/upload.service';
 import { CustomError } from '../errors/CustomError';
-import { HotelInfoDto } from './dtos/hotel-info.dto';
 
 @Injectable()
 export class HotelService {
@@ -131,42 +133,100 @@ export class HotelService {
       throw new NotFoundException(`There was no hotel with id: ${hotelId}`);
     }
     const hotel = await this.hotelRepository.findOne({
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        price_per_guest: true,
+        cabin_capacity: true,
+        city: true,
+        state: true,
+        country: true,
+        complete_address: true,
+      },
       relations: {
         amenities: true,
+        main_image: true,
+        extra_images: true,
+        cabins: {
+          bookings: true,
+        },
       },
       where: { id: hotelId },
     });
     if (!hotel) {
       throw new NotFoundException(`There was no hotel with id: ${hotelId}`);
     }
-    return hotel;
+    const bookings = hotel.cabins.map((cabin) =>
+      cabin.bookings.map((booking) => [booking.from_date, booking.to_date]),
+    );
+    const { cabins, ...rest } = hotel;
+    return {
+      ...rest,
+      main_image: this.uploadService.getPresignedUrl(
+        hotel.main_image.object_key,
+      ),
+      extra_images: hotel.extra_images.map((image) =>
+        this.uploadService.getPresignedUrl(image.object_key),
+      ),
+      amenities: hotel.amenities.map((amenity) => amenity.name),
+      bookings,
+    };
   }
 
-  findHotel({ latlng, distance, book_from, book_to, amenities }: FindHotelDto) {
+  async findHotel({
+    latlng,
+    distance,
+    book_from,
+    book_to,
+    amenities,
+    address,
+    page,
+  }: FindHotelDto) {
     if (!book_from || !book_to) {
       book_from = undefined;
       book_to = undefined;
     }
-    const origin: Point = {
-      type: 'Point',
-      coordinates: latlng
-        .replace(' ', '')
-        .split(',')
-        .reverse()
-        .map((val) => parseFloat(val)),
-    };
     let querybuiler = this.hotelRepository
       .createQueryBuilder('hotel')
       .select('hotel.id', 'id')
       // .addSelect('cabin.id', 'cabin_id')
-      .addSelect(
-        'ST_DistanceSphere(hotel.location::geometry, ST_SetSRID(ST_GeomFromGeoJSON(:origin), 4326))/1000',
-        'distance',
-      )
-      .andWhere(
-        'ST_DWithin(hotel.location, ST_SetSRID(ST_GeomFromGeoJSON(:origin), 4326)::geography ,:range, false)',
-      )
       .innerJoin('hotel.cabins', 'cabin');
+
+    let location_details: LocationDetails;
+
+    if (address) {
+      location_details = await this.geocodingService.getLocation(address);
+      querybuiler = querybuiler.andWhere(
+        `ST_Intersects(hotel.location, ST_MakeEnvelope(${[
+          location_details.box.lon1,
+          location_details.box.lat1,
+          location_details.box.lon2,
+          location_details.box.lat2,
+        ].join(',')}, 4326)::geography('POLYGON'))`,
+      );
+    } else if (latlng) {
+      const origin: Point = {
+        type: 'Point',
+        coordinates: latlng
+          .replace(' ', '')
+          .split(',')
+          .reverse()
+          .map((val) => parseFloat(val)),
+      };
+      querybuiler = querybuiler
+        .addSelect(
+          'ST_DistanceSphere(hotel.location::geometry, ST_SetSRID(ST_GeomFromGeoJSON(:origin), 4326))/1000',
+          'distance',
+        )
+        .andWhere(
+          'ST_DWithin(hotel.location, ST_SetSRID(ST_GeomFromGeoJSON(:origin), 4326)::geography ,:range, false)',
+        );
+      querybuiler = querybuiler.setParameters({
+        origin: JSON.stringify(origin),
+        range: distance && distance > 1000 ? distance : 1000,
+      });
+    }
 
     if (book_from) {
       querybuiler = querybuiler.andWhere(
@@ -175,43 +235,66 @@ export class HotelService {
     }
 
     if (amenities && amenities.length !== 0) {
+      console.log(amenities);
       const names = amenities.replace(' ', '').toLowerCase().split(',');
       querybuiler = querybuiler
         .innerJoin('hotel.amenities', 'amenity')
-        // .addSelect('amenity.id', 'amenity_id')
-        // .addSelect('COUNT(*)', 'count')
-        // .addSelect('amenity.name', 'amenity_name')
         .andWhere('LOWER(amenity.name) IN (:...names)', { names })
-        .having('COUNT(*) = :count', { count: names.length });
+        .having('COUNT(DISTINCT amenity.name) = :count', {
+          count: names.length,
+        });
     }
 
-    querybuiler = querybuiler.groupBy('hotel.id').addGroupBy('cabin.id');
+    querybuiler = querybuiler.addGroupBy('hotel.id');
 
     querybuiler = querybuiler
-      .addSelect('file.object_key', 'main_image_url')
       .innerJoin('hotel.main_image', 'file')
+      .addSelect('file.object_key', 'main_image_url')
       .addGroupBy('main_image_url');
 
     querybuiler = querybuiler
+      .addSelect('hotel.number', 'number')
+      .addSelect('hotel.name', 'name')
       .addSelect('hotel.city', 'city')
-      .addSelect('hotel.state', 'state')
-      .addGroupBy('city')
-      .addGroupBy('state');
+      .addSelect('hotel.state', 'state');
+    // .addGroupBy('number')
+    // .addGroupBy('name')
+    // .addGroupBy('city')
+    // .addGroupBy('state');
 
-    querybuiler = querybuiler.distinctOn(['hotel.id']);
+    querybuiler = querybuiler.distinctOn(['hotel.number']);
 
-    querybuiler = querybuiler.setParameters({
-      origin: JSON.stringify(origin),
-      range: distance,
-    });
+    querybuiler = querybuiler.addSelect('COUNT(*) over()', 'count');
 
-    return querybuiler.getRawMany();
+    const items_per_page = 2;
+    const current_page = page ?? 1;
+    querybuiler = querybuiler
+      .orderBy('hotel.number')
+      .offset((current_page - 1) * items_per_page)
+      .limit(items_per_page);
+
+    const data = await querybuiler.getRawMany();
+
+    return {
+      data: data.map((hotel) => {
+        const { number, main_image_url, count, ...rest } = hotel;
+        return {
+          ...rest,
+          main_image_url,
+          // main_image_url: this.uploadService.getPresignedUrl(main_image_url),
+        };
+      }),
+      count: data.length > 0 ? data[0].count : 0,
+    };
   }
 
   async getHotels(page: number) {
-    const hotels = await this.hotelRepository.find({
+    const items_per_page = 10;
+    const current_page = page ?? 1;
+    const [hotels, count] = await this.hotelRepository.findAndCount({
       select: {
         id: true,
+        number: true,
         name: true,
         price: true,
         cabin_capacity: true,
@@ -219,14 +302,16 @@ export class HotelService {
         state: true,
         country: true,
         complete_address: true,
-        amenities: true,
       },
       relations: {
         main_image: true,
         extra_images: true,
       },
-      take: 10,
-      skip: (page - 1) * 10,
+      order: {
+        number: 'ASC',
+      },
+      take: items_per_page,
+      skip: (current_page - 1) * items_per_page,
     });
     const arr = hotels.map((hotel) => {
       return {
@@ -241,7 +326,7 @@ export class HotelService {
         ),
       };
     });
-    return arr;
+    return { hotels: arr, totalPages: Math.ceil(count / items_per_page) };
   }
 
   async updateHotel(

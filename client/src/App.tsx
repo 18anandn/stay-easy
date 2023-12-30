@@ -1,4 +1,5 @@
 import {
+  Navigate,
   Route,
   RouterProvider,
   createBrowserRouter,
@@ -18,11 +19,16 @@ import Profile from './pages/Profile';
 import ProtectedRoutes from './ui/ProtectedRoutes';
 import CreateHotel from './pages/CreateHotel';
 import Explore from './pages/Explore';
+import HomeInfo from './pages/HomeInfo';
+import Privacy from './pages/Privacy';
+import ErrorPage from './pages/ErrorPage';
+import Terms from './pages/Terms';
+import Booking from './pages/Booking';
+import Trips from './pages/Trips';
 
 const StyledApp = styled.div`
-  height: 100dvh;
-  width: calc(100dvw - (100vw - 100%));
-  overflow: hidden;
+  /* height: 100dvh; */
+  width: calc(100dvw - (100dvw - 100%));
   /* background: #FBFAF5; */
 
   /* background: #c9d6ff;
@@ -41,7 +47,10 @@ const StyledApp = styled.div`
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 20 * 1000,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+      retry: false,
+      refetchOnWindowFocus: false,
     },
   },
   logger: {
@@ -68,16 +77,25 @@ function App() {
           />
           <Route path="signup" element={<SignUp />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="explore" element={<Explore />} />
+          <Route path="all-homes" element={<Explore />} />
+          <Route path="home/:homeId" element={<HomeInfo />} />
+          <Route path="book/:homeId" element={<Booking />} />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="terms" element={<Terms />} />
+          <Route path="user">
+            <Route index element={<Navigate to="trips" />} />
+            <Route path="trips" element={<Trips />} />
+          </Route>
+          <Route path="*" element={<ErrorPage />} />
+          <Route
+            path="search"
+            element={
+              <ProtectedRoutes>
+                <MapSearch />
+              </ProtectedRoutes>
+            }
+          />
         </Route>
-        <Route
-          path="/search"
-          element={
-            <ProtectedRoutes>
-              <MapSearch />
-            </ProtectedRoutes>
-          }
-        />
       </Route>,
     ),
   );

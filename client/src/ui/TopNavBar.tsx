@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
 import logo from '../assets/logo.png';
@@ -7,10 +7,12 @@ import LoginButton from '../features/users/LoginButton';
 
 const StyledTopNavBar = styled.nav`
   white-space: nowrap;
-  padding: 1rem 2rem 0 2rem;
+  --top-bottom-padding: 1.4rem;
+  padding: var(--top-bottom-padding) 5rem var(--top-bottom-padding) 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid rgb(211, 211, 211);
 `;
 
 const StyledUl = styled.ul`
@@ -35,26 +37,29 @@ const StyledImg = styled.img`
 `;
 
 const TopNavBar: React.FC = () => {
+  const location = useLocation();
 
   return (
     <StyledTopNavBar>
       <Link to="/">
         <StyledImg src={logo} />
       </Link>
-      <StyledUl>
-        <StyledLi>
-          <StyledNavLink to="/explore">Explore</StyledNavLink>
-        </StyledLi>
-        <StyledLi>
-          <StyledNavLink to="/search">Book Rooms</StyledNavLink>
-        </StyledLi>
-        <StyledLi>
-          <StyledNavLink to="/register">Register Your Home</StyledNavLink>
-        </StyledLi>
-        <StyledLi className="profile-button">
-          <LoginButton />
-        </StyledLi>
-      </StyledUl>
+      {!location.pathname.startsWith('/book') && (
+        <StyledUl>
+          <StyledLi>
+            <StyledNavLink to="/all-homes">All Homes</StyledNavLink>
+          </StyledLi>
+          <StyledLi>
+            <StyledNavLink to="/search">Search</StyledNavLink>
+          </StyledLi>
+          <StyledLi>
+            <StyledNavLink to="/register">Register Your Home</StyledNavLink>
+          </StyledLi>
+          <StyledLi className="profile-button">
+            <LoginButton />
+          </StyledLi>
+        </StyledUl>
+      )}
     </StyledTopNavBar>
   );
 };

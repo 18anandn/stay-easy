@@ -4,7 +4,9 @@ interface SpinnerProps {
   color?: string;
 }
 
-const StyledSpinner = styled.div<SpinnerProps>`
+const StyledSpinner = styled.div.attrs({
+  className: 'custom-spinner',
+})<SpinnerProps>`
   height: 100%;
   width: 100%;
   display: flex;

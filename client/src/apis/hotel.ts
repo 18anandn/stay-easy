@@ -83,14 +83,6 @@ export const uploadImages = async (images: File[]): Promise<string[]> => {
 
   const { url, keys, fields }: PresignedPostUrls = data;
   const names = keys;
-  // const names = keys.map((val, i) => {
-  //   const arr = images[i].name.split('.');
-  //   if (arr.length < 2) {
-  //     throw new ServerError('No extension on file', 400);
-  //   }
-  //   return `${val}.${arr.at(-1)}`;
-  // });
-
   const uploads: Promise<any>[] = [];
   for (let i = 0; i < images.length; i++) {
     uploads.push(uploadFile(url, names[i], fields, images[i]));
@@ -125,19 +117,44 @@ export const createHotel = async (
 export type HotelInfo = {
   id: string;
   name: string;
-  price: number;
+  price: string;
+  price_per_guest: string;
   cabin_capacity: number;
   city: string;
   state: string;
   country: string;
   complete_address: string;
   main_image: string;
+  extra_images: string[];
   amenities: string[];
+  bookings: string[][][];
 };
 
-export const getHotels = async (page: number): Promise<HotelInfo> => {
+export type HotelPage = {
+  hotels: HotelInfo[];
+  totalPages: number;
+};
+
+export const getHotels = async (page: number): Promise<HotelPage> => {
   // console.log(page);
   const res = await fetch(`api/v1/hotel?page=${page}`, {
+    method: 'GET',
+    cache: 'no-cache',
+    mode: 'cors',
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new ServerError(data.message, res.status);
+  }
+
+  return data;
+};
+
+export const getHome = async (homeId: string): Promise<HotelInfo> => {
+  const url = `/api/v1/hotel/${homeId}`;
+  const res = await fetch(url, {
     method: 'GET',
     cache: 'no-cache',
     mode: 'cors',

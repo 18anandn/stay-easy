@@ -17,13 +17,16 @@ export class User {
   id: string;
 
   @Column({ type: 'varchar', length: 20, nullable: false })
-  name: string;
+  first_name: string;
+
+  @Column({ type: 'varchar', length: 20, nullable: false })
+  last_name: string;
 
   @Column({ type: 'varchar', length: 30, nullable: false, unique: true })
   @Check("email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'")
   email: string;
 
-  @Column({ type: 'varchar', length: 60, nullable: false })
+  @Column({ type: 'varchar', length: 72, nullable: false })
   password: string;
 
   @Column({

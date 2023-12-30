@@ -13,6 +13,7 @@ export interface LoginCreds {
 
 export interface LoginRes {
   userId: string;
+  role: string;
 }
 
 export class ServerError extends Error {
@@ -32,6 +33,7 @@ export type CreateHotelFormData = {
   location: string;
   location_name?: string;
   price: string;
+  price_per_guest: string;
   cabin_amount: number;
   cabin_capacity: number;
   amenities?: string[];
@@ -60,3 +62,9 @@ export type GeoCodingData = {
     lat2: number;
   };
 };
+
+export const CHECK_IN = 'check-in';
+export const CHECK_OUT = 'check-out';
+export const GUESTS = 'guests';
+export const DATE_FORMAT_NUM = 'yyyy-MM-dd';
+export const DATE_FORMAT_TEXT = 'd, LLL y';

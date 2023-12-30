@@ -5,27 +5,42 @@ import ObserverTarget from '../features/intersection-observer/ObserverTarget';
 import { useObserver } from '../features/intersection-observer/useObserver';
 import useGetHotels from '../features/hotels/useGetHotels';
 import HotelCard from '../features/hotels/HotelCard';
+import Loader from '../ui/loaders/Loader';
 
 const StyledExplore = styled.div`
   /* min-height: 100dvh; */
+  min-height: 100%;
+  box-sizing: border-box;
   position: relative;
-  padding: 5rem;
-  font-size: 1rem;
-  border: 1px solid red;
+  padding: 4rem;
 
   ul {
     list-style-type: none;
     display: grid;
+    grid-template-columns: repeat(auto-fill, 14rem);
+    justify-content: center;
+    gap: 4rem 4rem;
   }
 
   li {
-    width: min-content;
-    border: 1px solid blue;
+  }
+
+  .initial-page-loader {
+    height: 100%;
+    font-size: 80px;
+    /* border: 1px solid red; */
+  }
+
+  .next-page-loader {
+    padding: 3rem 0;
+    height: 100px;
+    font-size: 50px;
+    /* border: 1px solid red; */
   }
 `;
 
 const Explore: React.FC = () => {
-  const { data, fetchNextPage, isLoading, isFetchingNextPage, hasNextPage } =
+  const { data, fetchNextPage, isFetching, isFetchingNextPage, hasNextPage } =
     useGetHotels();
   const { containerRef, isVisible } = useObserver();
   useEffect(() => {
@@ -39,7 +54,7 @@ const Explore: React.FC = () => {
         {data &&
           data.pages.map((page, index) => (
             <Fragment key={index}>
-              {page.map((val) => (
+              {page.hotels.map((val) => (
                 <li key={val.id}>
                   <HotelCard hotelInfo={val} />
                 </li>
@@ -47,10 +62,20 @@ const Explore: React.FC = () => {
             </Fragment>
           ))}
       </ul>
+      {isFetching && !isFetchingNextPage && (
+        <div className="initial-page-loader">
+          <Loader color="black" />
+        </div>
+      )}
+      {isFetchingNextPage && (
+        <div className="next-page-loader">
+          <Loader color="black" />
+        </div>
+      )}
       <ObserverTarget
         ref={containerRef}
         show={
-          !isLoading &&
+          !isFetching &&
           !isFetchingNextPage &&
           (hasNextPage === undefined || hasNextPage === true)
         }

@@ -17,7 +17,7 @@ const useLoginUser = () => {
     onSuccess: (data) => {
       toast.success('Successfully logged in');
       // queryClient.invalidateQueries(['current-user']);
-      queryClient.setQueryData(['current-user'], { userId: data.userId });
+      queryClient.setQueryData(['current-user'], data);
     },
     onError: (error) => {
       toast.error(error.message);

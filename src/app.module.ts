@@ -92,7 +92,7 @@ export class AppModule implements NestModule {
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(delayer(1500)).forRoutes('*');
+    consumer.apply(delayer(1500)).forRoutes('*');
     consumer
       .apply(cookieParser(this.configService.get('JWT_SECRET')))
       .forRoutes('*');

@@ -17,7 +17,7 @@ export class Cabin {
   @Column({ type: 'integer', nullable: false })
   cabin_capacity: number;
 
-  @ManyToOne((type) => Hotel)
+  @ManyToOne((type) => Hotel, {onDelete: 'CASCADE'})
   @JoinColumn({
     name: 'hotel_id',
     referencedColumnName: 'id',
