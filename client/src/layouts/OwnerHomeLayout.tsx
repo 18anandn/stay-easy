@@ -1,8 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import styled from 'styled-components';
 import OwnerNavBar from './OwnerNavBar';
-import { useContext } from 'react';
-import { HomeContext } from '../features/owner/context/HomeContextProvider';
+import { useHomeName } from '../features/owner/providers/HomeProvider';
 
 const StyledOwnerHomLayout = styled.div`
   display: grid;
@@ -25,7 +24,7 @@ const StyledOwnerHomLayout = styled.div`
 `;
 
 const OwnerHomeLayout: React.FC = () => {
-  const { homeName } = useContext(HomeContext);
+  const homeName = useHomeName();
   return (
     <StyledOwnerHomLayout>
       <OwnerNavBar />

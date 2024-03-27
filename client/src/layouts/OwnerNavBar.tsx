@@ -10,7 +10,7 @@ const StyledOwnerNavBar = styled.div`
   --nav-width: 250px;
   --button-width: 25px;
   width: var(--nav-width);
-  min-height: 100dvh;
+  height: 100dvh;
   position: sticky;
   top: 0;
   box-sizing: border-box;
@@ -184,6 +184,12 @@ const OwnerNavBar: React.FC = () => {
         onClick={() => {
           if (isNavbarOpen) {
             setIsNavbarOpen(false);
+            allowTransition.current = false;
+            window.setTimeout(() => {
+              allowTransition.current = true;
+            }, TRANSITION_DURATION);
+          } else {
+            setIsNavbarOpen(true);
             allowTransition.current = false;
             window.setTimeout(() => {
               allowTransition.current = true;

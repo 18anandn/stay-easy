@@ -1,8 +1,9 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Footer from './Footer';
-import { ReactNode, Suspense, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import Loader from '../components/loaders/Loader';
+import { ScreenProvider } from '../providers/ScreenProvider';
 
 const ViewPortBox = styled.div`
   min-height: 100dvh;
@@ -29,6 +30,7 @@ const AppLayout: React.FC = () => {
 
   return (
     <>
+      <ScreenProvider />
       <ViewPortBox>
         <StyledMain>
           <Suspense fallback={<Loader />}>

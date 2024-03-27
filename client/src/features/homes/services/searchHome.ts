@@ -125,8 +125,11 @@ export const getFindHomeParams = (
   };
 };
 
+let count = 0;
+
 export const searchHomeList = tryCatchWrapper(
   async (params: SearchHomeListParams): Promise<SearchHomeListRes> => {
+    console.log('here', count++);
     const searchParams = toSearchHomeURLParams(params);
     if (searchParams.get('min') && searchParams.has('max')) {
       searchParams.delete('address');
@@ -169,8 +172,9 @@ export const searchHomeList = tryCatchWrapper(
       data.max = data.bounds[1].reverse().join(',');
       data.params.min = data.min;
       data.params.max = data.max;
-      data.bounds = new LatLngBounds(data.bounds[0], data.bounds[1]);
-      if (data.homes.length > 1) {
+      if (params.address.length === 0) {
+        data.bounds = new LatLngBounds(data.bounds[0], data.bounds[1]);
+      } else if (data.homes.length > 1) {
         data.bounds = getBbox(
           data.homes.map((val: { location: any }) => val.location)
         );

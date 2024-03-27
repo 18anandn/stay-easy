@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { screenWidths } from '../components/ScreenContextProvider';
+import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledFooter = styled.footer`
   padding: 2.5rem 5%;

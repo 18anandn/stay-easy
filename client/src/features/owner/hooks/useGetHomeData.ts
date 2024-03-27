@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { getHomeData } from '../services/getHomeData';
 import { Exception } from '../../../data/Exception';
-import { useContext, useEffect } from 'react';
-import { HomeContext } from '../context/HomeContextProvider';
+import { useEffect } from 'react';
+import { useSetHomeName } from '../providers/HomeProvider';
 
 export const useGetHomeData = (id: string | undefined) => {
   const { data, isLoading, isError, error } = useQuery({
@@ -14,7 +14,8 @@ export const useGetHomeData = (id: string | undefined) => {
       return getHomeData(id);
     },
   });
-  const { setHomeName } = useContext(HomeContext);
+  
+  const setHomeName = useSetHomeName();
   useEffect(() => {
     if (data) {
       setHomeName(data.name);

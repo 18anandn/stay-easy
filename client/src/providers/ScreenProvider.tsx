@@ -1,4 +1,5 @@
-import { ReactNode, createContext, useEffect, useState } from 'react';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { useEffect } from 'react';
 
 export enum ScreenType {
   DESKTOP = 'desktop',
@@ -12,10 +13,6 @@ export const screenWidths = {
   phone: 600,
 };
 
-type ContextType = {
-  screen: ScreenType;
-};
-
 let defaultScreen = ScreenType.DESKTOP;
 if (window.innerWidth <= screenWidths.phone) {
   defaultScreen = ScreenType.PHONE;
@@ -23,16 +20,10 @@ if (window.innerWidth <= screenWidths.phone) {
   defaultScreen = ScreenType.TAB;
 }
 
-export const ScreenContext = createContext<ContextType>({
-  screen: defaultScreen,
-});
+const screenAtom = atom(defaultScreen);
 
-type Props = {
-  children?: ReactNode;
-};
-
-const ScreenContextProvider: React.FC<Props> = ({ children }) => {
-  const [screen, setScreen] = useState<ScreenType>(() => defaultScreen);
+export const ScreenProvider: React.FC = () => {
+  const setScreen = useSetAtom(screenAtom);
 
   useEffect(() => {
     function screenTypeCheck() {
@@ -52,13 +43,9 @@ const ScreenContextProvider: React.FC<Props> = ({ children }) => {
     return () => {
       window.removeEventListener('resize', screenTypeCheck);
     };
-  }, []);
+  }, [setScreen]);
 
-  return (
-    <ScreenContext.Provider value={{ screen }}>
-      {children}
-    </ScreenContext.Provider>
-  );
+  return null;
 };
 
-export default ScreenContextProvider;
+export const useScreen = () => useAtomValue(screenAtom);

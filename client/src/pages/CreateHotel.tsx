@@ -27,7 +27,7 @@ import {
 } from '../features/homes/services/createHome';
 import { Exception } from '../data/Exception';
 import { AMENITIES_OPTIONS } from '../data/amenities';
-import { screenWidths } from '../components/ScreenContextProvider';
+import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledCreateHotel = styled.div`
   padding: 50px 5%;

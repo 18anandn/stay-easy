@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import Select from 'react-select';
-import { useContext } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import ResponsivePagination from 'react-responsive-pagination';
@@ -13,7 +12,7 @@ import { BookingFilter } from '../../features/owner/enums/BookingFilter';
 import Spinner from '../../components/loaders/Spinner';
 import ErrorPage from '../ErrorPage';
 import { DATE_FORMAT_TEXT } from '../../data/constants';
-import { HomeContext } from '../../features/owner/context/HomeContextProvider';
+import { useHomeName } from '../../features/owner/providers/HomeProvider';
 
 const StyledOwnerBookings = styled.div`
   display: flex;
@@ -56,7 +55,7 @@ const StyledOwnerBookings = styled.div`
   .pagination-container {
     margin-top: auto;
   }
-  
+
   .table {
     table {
       border-radius: 1rem;
@@ -122,7 +121,7 @@ const defaultSortOption = bookingSortOptionList[0];
 
 const OwnerBookings: React.FC = () => {
   const { ownerHomeId } = useParams();
-  const { homeName } = useContext(HomeContext);
+  const homeName = useHomeName();
   const [searchParams, setSearchParams] = useSearchParams();
   const filter_param = searchParams.get('filter')?.toLowerCase();
   let selectedFilter = defaultFilterOption;

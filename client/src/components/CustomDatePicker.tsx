@@ -1,11 +1,11 @@
 import styled from 'styled-components';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { MouseEventHandler, useContext, useEffect, useState } from 'react';
+import { MouseEventHandler, useEffect, useState } from 'react';
 import { addDays, format } from 'date-fns';
-import { ScreenContext } from './ScreenContextProvider';
 import CloseButton from './buttons/CloseButton';
 import { DATE_FORMAT_TEXT } from '../data/constants';
+import { useScreen } from '../providers/ScreenProvider';
 
 const StyledCustomDatePicker = styled.div`
   /* --height: 50px; */
@@ -309,12 +309,12 @@ const CustomDatePicker: React.FC<Props> = ({
   onSelectedFieldChange,
   onDateRangeChange,
 }) => {
-  const { screen } = useContext(ScreenContext);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     () => initialDateRange
   );
   const [isOpenDatePicker, setIsOpenDatePicker] = useState<boolean>(false);
   const [selectedField, setSelectedField] = useState<SelectedFieldType>();
+  const screen = useScreen();
 
   function closeDatePicker() {
     setIsOpenDatePicker(false);

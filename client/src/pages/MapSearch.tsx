@@ -34,8 +34,10 @@ import { useSearchParams } from 'react-router-dom';
 import SetBounds from '../map/components/SetBounds';
 import PriceMarker, { MarkerCss } from '../map/components/PriceMarker';
 import FormWrapper, { formModalAtom } from '../components/FormWrapper';
-import { screenWidths } from '../components/ScreenContextProvider';
+import { screenWidths } from '../providers/ScreenProvider';
 import { useSetAtom } from 'jotai';
+import classNames from 'classnames';
+import { MapPopupProvider } from '../map/MapPopupProvider';
 
 // type MarkerInfo
 
@@ -394,8 +396,7 @@ const MapSearch: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (isLoading) {
-    } else if (!isLoading && data) {
+    if (data) {
       const { params: passedParams } = data;
       setSearchParams(toSearchHomeURLParams(passedParams), {
         replace: true,
@@ -403,24 +404,27 @@ const MapSearch: React.FC = () => {
       });
       reset(passedParams);
     }
-  }, [isLoading, data, setSearchParams, reset]);
+  }, [data, setSearchParams, reset]);
 
-  const onSearch: SubmitHandler<SearchHomeListParams> = (data) => {
+  const onSearch: SubmitHandler<SearchHomeListParams> = (formData) => {
     setFormModalState(false);
     const prevAddress = currentParams.address
       .trim()
       .replace(/\s+/g, ' ')
       .toLowerCase();
-    const currAddress = data.address.trim().replace(/\s+/g, ' ').toLowerCase();
+    const currAddress = formData.address
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
     if (prevAddress !== currAddress) {
-      data.min = '';
-      data.max = '';
+      formData.min = '';
+      formData.max = '';
     }
     popupOpenHomeRef.current = undefined;
-    data.page = 1;
-    data.sortBy = '';
-    data.order = '';
-    setSearchParams(toSearchHomeURLParams(data));
+    formData.page = 1;
+    formData.sortBy = '';
+    formData.order = '';
+    setSearchParams(toSearchHomeURLParams(formData));
     reset({}, { keepValues: true });
 
     if (isFiltersOpen) {
@@ -468,6 +472,21 @@ const MapSearch: React.FC = () => {
   const disableSearch = isLoading || !(formState.isDirty || isError);
   const isMapOpen = isMapOpenRef.current;
   const filtersNum = watch('amenities').length;
+
+  const mapClassNames = {
+    'map-open': isMapOpen,
+    'map-close': !isMapOpen,
+  };
+
+  const leftColumnClasses = classNames({
+    'left-column': true,
+    ...mapClassNames,
+  });
+
+  const mapContainerClasses = classNames({
+    'map-container': true,
+    ...mapClassNames,
+  });
 
   return (
     <StyledMapSearch>
@@ -605,11 +624,7 @@ const MapSearch: React.FC = () => {
               >
                 Clear all
               </Button>
-              <Button
-                type="submit"
-                form="map-search"
-                disabled={disableSearch}
-              >
+              <Button type="submit" form="map-search" disabled={disableSearch}>
                 Search
               </Button>
             </div>
@@ -617,7 +632,7 @@ const MapSearch: React.FC = () => {
         </Modal>
       </FormProvider>
       <div className="columns">
-        <div className={`left-column ${isMapOpen ? 'map-open' : 'map-close'}`}>
+        <div className={leftColumnClasses}>
           {isLoading && <Spinner color="black" />}
           {!isLoading &&
             data &&
@@ -690,10 +705,11 @@ const MapSearch: React.FC = () => {
             ))}
           {isError && <ErrorPage error={error} />}
         </div>
+        <MapPopupProvider />
         {isMapOpen && (
           <div className="right-column">
             <div
-              className={`map-container${isMapOpen ? ' open-map' : ''}`}
+              className={mapContainerClasses}
               // className='map-container'
             >
               <ToggleButton
@@ -739,7 +755,9 @@ const MapSearch: React.FC = () => {
                 <SetBounds
                   initialBounds={data?.bounds}
                   yourBounds={
-                    currentParams.address.length > 0 ? data?.bounds : undefined
+                    data && data.params.address.length > 0
+                      ? data.bounds
+                      : undefined
                   }
                   onBoundsChange={(bounds) => {
                     if (allowDragRefreshRef.current) {

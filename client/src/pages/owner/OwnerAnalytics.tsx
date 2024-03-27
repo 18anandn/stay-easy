@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useContext, useMemo } from 'react';
+import { useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import Select from 'react-select';
 
@@ -12,7 +12,7 @@ import CustomLineChart from '../../components/charts/CustomLineChart';
 import CustomBarChart from '../../components/charts/CustomBarChart';
 import { years } from '../../data/years';
 import ErrorPage from '../ErrorPage';
-import { HomeContext } from '../../features/owner/context/HomeContextProvider';
+import { useHomeName } from '../../features/owner/providers/HomeProvider';
 import { moneyFormatter } from '../../utils/money-formatter';
 
 const tickFormatter = {
@@ -85,7 +85,7 @@ const StyledOwnerAnalytics = styled.div`
 `;
 
 const OwnerAnalytics: React.FC = () => {
-  const { homeName } = useContext(HomeContext);
+  const homeName = useHomeName();
   const { ownerHomeId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const year_param = searchParams.get('year');

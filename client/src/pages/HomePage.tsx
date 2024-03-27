@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import homePageImage from '../assets/homepage.png';
-import { screenWidths } from '../components/ScreenContextProvider';
+import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledHome = styled.div`
   padding: 0 5%;

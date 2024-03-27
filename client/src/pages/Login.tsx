@@ -15,7 +15,7 @@ import { useCurrentUser } from '../features/auth/hooks/useCurrentUser';
 import { useLoginUser } from '../features/auth/hooks/useLoginUser';
 import { LoginCreds } from '../features/auth/types/LoginCreds';
 import { Subdomain, getSubdomain } from '../utils/getSubdomain';
-import { screenWidths } from '../components/ScreenContextProvider';
+import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledLogin = styled.div`
   font-size: 1rem;

@@ -1,18 +1,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useContext, useRef } from 'react';
+import { useRef } from 'react';
 import { SearchHomeListParams } from '../types/SearchHomeListParams';
 import { searchHomeList } from '../services/searchHome';
-import { LocationContext } from '../../../map/components/LocationContext';
+import { getLocation, addLocation } from '../../../map/utils/LocationStore';
 
 export const useSearchHomeList = (params: SearchHomeListParams) => {
   const totalCount = useRef<number>();
   const queryClient = useQueryClient();
-  const { getLocation, addLocation } = useContext(LocationContext);
-  // if(params.address.length > 0) {
-  //   const [lower, higher] = getLocation(params.address);
-  //   params.min = lower;
-  //   params.max = higher;
-  // }
+  if (params.address.length > 0) {
+    const [lower, higher] = getLocation(params.address);
+    params.min = lower;
+    params.max = higher;
+  }
   const { data, isLoading, error, isError } = useQuery({
     queryKey: ['search-homes', ...formKey(params)],
     queryFn: async () => {
@@ -76,6 +75,6 @@ const formKey = (param: SearchHomeListParams): any[] => {
     order,
     page,
   ];
-  
+
   return keys;
 };

@@ -1,7 +1,7 @@
 import L, { LatLngLiteral, divIcon } from 'leaflet';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Marker, Popup, useMap } from 'react-leaflet';
-import { LocationContext } from './LocationContext';
+import { usePopupDimensions } from '../MapPopupProvider';
 import { css } from 'styled-components';
 import { Link } from 'react-router-dom';
 import { HomeCardWithLocation } from '../../features/homes/types/HomeCardWithLocation';
@@ -200,7 +200,7 @@ const PriceMarker: React.FC<Props> = ({
   focused,
 }) => {
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
-  const { popupDimensions } = useContext(LocationContext);
+  const popupDimensions = usePopupDimensions();
   const map = useMap();
   const markerRef = useRef<L.Marker>(null);
   const iconRef = useRef<L.DivIcon>(

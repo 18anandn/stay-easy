@@ -3,8 +3,8 @@ import { Exception } from '../../../data/Exception';
 import { getBookingList } from '../services/getBookingList';
 import { BookingFilterOption } from '../types/BookingFilterOption';
 import { BookingSortOption } from '../types/BookingSortOption';
-import { useContext, useEffect } from 'react';
-import { HomeContext } from '../context/HomeContextProvider';
+import { useEffect } from 'react';
+import { useSetHomeName } from '../providers/HomeProvider';
 
 export const useGetBookingList = (
   id: string | undefined,
@@ -29,13 +29,13 @@ export const useGetBookingList = (
       return getBookingList(id, filter, sortBy, page);
     },
   });
-  
-  const { setHomeName } = useContext(HomeContext);
+
+  const setHomeName = useSetHomeName();
   useEffect(() => {
     if (data) {
       setHomeName(data.name);
     }
   }, [data, setHomeName]);
-  
+
   return { data, isLoading, isError, error };
 };

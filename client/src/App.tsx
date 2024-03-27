@@ -9,9 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 
 import GlobalStyles from './GlobalStyles';
-import ScreenContextProvider from './components/ScreenContextProvider';
 import ErrorPage from './pages/ErrorPage';
-import { LocationContextProvider } from './map/components/LocationContext';
 import AppLayout from './layouts/AppLayout';
 import { Exception } from './data/Exception';
 import { Subdomain, getSubdomain } from './utils/getSubdomain';
@@ -19,7 +17,6 @@ import Main from './routes/Main';
 import Admin from './routes/Admin';
 import Owner from './routes/Owner';
 import { AuthWithBaseUrl } from './routes/AuthWithBaseUrl';
-import MenuContextProvider from './components/MenuContextProvider';
 
 const StyledApp = styled.div``;
 
@@ -53,48 +50,44 @@ function App() {
   }
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route element={<AppLayout />}>
-        {displayRoute}
+      <>
+        <Route element={<AppLayout />}>
+          {displayRoute}
 
-        <Route
-          path="*"
-          element={
-            <ErrorPage
-              error={
-                new Exception(
-                  'The page you are looking for does not exist',
-                  404
-                )
-              }
-            />
-          }
-        />
-      </Route>
+          <Route
+            path="*"
+            element={
+              <ErrorPage
+                error={
+                  new Exception(
+                    'The page you are looking for does not exist',
+                    404
+                  )
+                }
+              />
+            }
+          />
+        </Route>
+      </>
     )
   );
 
   return (
     <QueryClientProvider client={queryClient}>
       <GlobalStyles />
-      <LocationContextProvider>
-        <ScreenContextProvider>
-          <MenuContextProvider>
-            <StyledApp>
-              <Toaster
-                toastOptions={{
-                  duration: 3000,
-                  style: {
-                    whiteSpace: 'nowrap',
-                    position: 'relative',
-                    zIndex: '20000',
-                  },
-                }}
-              />
-              <RouterProvider router={router} />
-            </StyledApp>
-          </MenuContextProvider>
-        </ScreenContextProvider>
-      </LocationContextProvider>
+      <StyledApp>
+        <Toaster
+          toastOptions={{
+            duration: 3000,
+            style: {
+              whiteSpace: 'nowrap',
+              position: 'relative',
+              zIndex: '20000',
+            },
+          }}
+        />
+        <RouterProvider router={router} />
+      </StyledApp>
     </QueryClientProvider>
   );
 }

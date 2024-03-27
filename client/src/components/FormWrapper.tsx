@@ -1,10 +1,10 @@
-import { useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { atom, useAtom } from 'jotai';
 
 import Modal from './Modal';
-import { ScreenContext, ScreenType } from './ScreenContextProvider';
+import { ScreenType, useScreen } from '../providers/ScreenProvider';
 import { getFindHomeParams } from '../features/homes/services/searchHome';
 import { dateRangeFormatter } from '../utils/dates/date-range-formatter';
 
@@ -38,7 +38,7 @@ const StyledButton = styled.button`
 export const formModalAtom = atom(false);
 
 const FormWrapper: React.FC<Props> = ({ children }) => {
-  const { screen } = useContext(ScreenContext);
+  const screen = useScreen();
   const [isOpenModal, setIsOpenModal] = useAtom(formModalAtom);
   const [searchParams] = useSearchParams();
   const currentParams = getFindHomeParams(searchParams);
@@ -48,7 +48,6 @@ const FormWrapper: React.FC<Props> = ({ children }) => {
       setIsOpenModal(false);
     }
   }, [screen, setIsOpenModal]);
-  console.log('screen changed');
 
   if (screen === ScreenType.PHONE) {
     return (

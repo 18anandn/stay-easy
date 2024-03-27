@@ -6,7 +6,7 @@ import { useObserver } from '../features/intersection-observer/hooks/useObserver
 import useGetHomesList from '../features/homes/hooks/useGetHomeList';
 import HomeCard from '../features/homes/components/HomeCard';
 import Spinner from '../components/loaders/Spinner';
-import { screenWidths } from '../components/ScreenContextProvider';
+import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledExplore = styled.div`
   /* min-height: 100dvh; */

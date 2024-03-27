@@ -6,7 +6,7 @@ import { useCurrentUser } from '../hooks/useCurrentUser';
 import UserNavList from './UserNavList';
 import SpinnerWithText from '../../../components/loaders/SpinnerWithText';
 import { NavLink } from 'react-router-dom';
-import { screenWidths } from '../../../components/ScreenContextProvider';
+import { screenWidths } from '../../../providers/ScreenProvider';
 
 const StyledLoginButton = styled.div`
   .login-text {
@@ -177,9 +177,7 @@ const LoginButton: React.FC = () => {
               </span>
             </span>
           </button>
-          <div
-            className={`user-nav-list ${isOpen ? 'open' : null}`}
-          >
+          <div className={`user-nav-list ${isOpen ? 'open' : null}`}>
             <UserNavList />
           </div>
         </>

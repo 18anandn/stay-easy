@@ -5,14 +5,13 @@ import classNames from 'classnames';
 import logo from '../assets/logo.png';
 import LoginButton from '../features/auth/components/LoginButton';
 import {
-  ScreenContext,
   ScreenType,
   screenWidths,
-} from '../components/ScreenContextProvider';
+  useScreen,
+} from '../providers/ScreenProvider';
 import MenuButton from '../components/MenuButton';
-import { useContext, useEffect } from 'react';
-import { MenuContext } from '../components/MenuContextProvider';
 import { useShowNavBar } from '../features/nav-bar-scroll/hooks/useShowNavBar';
+import { MenuProvider, useMenu } from '../providers/MenuProvider';
 
 const StyledTopNavBar = styled.nav`
   height: var(--top-navbar-height);
@@ -165,28 +164,9 @@ const StyledTopNavBar = styled.nav`
 
 const TopNavBar: React.FC = () => {
   const location = useLocation();
-  const { isSideMenuOpen, setIsSideMenuOpen } = useContext(MenuContext);
-  const { screen } = useContext(ScreenContext);
+  const [isSideMenuOpen, setIsSideMenuOpen] = useMenu();
+  const screen = useScreen();
   const { parentRef, isNavBarOpen } = useShowNavBar();
-
-  const { pathname } = useLocation();
-  useEffect(() => {
-    setIsSideMenuOpen(false);
-  }, [setIsSideMenuOpen, pathname]);
-
-  useEffect(() => {
-    if (isSideMenuOpen) {
-      document.body.classList.add('scroll-lock');
-    } else {
-      document.body.classList.remove('scroll-lock');
-    }
-  }, [isSideMenuOpen]);
-
-  useEffect(() => {
-    if (screen === ScreenType.DESKTOP) {
-      setIsSideMenuOpen(false);
-    }
-  }, [screen, setIsSideMenuOpen]);
 
   const navBarClasses = classNames({
     'nav-bar': true,
@@ -201,45 +181,48 @@ const TopNavBar: React.FC = () => {
   });
 
   return (
-    <StyledTopNavBar ref={parentRef}>
-      <div
-        className={backDropClasses}
-        onClick={() => setIsSideMenuOpen(false)}
-      ></div>
-      <div className={navBarClasses}>
-        <Link to="/">
-          <img src={logo} alt="" />
-        </Link>
-        <MenuButton
-          isOpen={isSideMenuOpen}
-          onClick={() => {
-            setIsSideMenuOpen((prev) => !prev);
-          }}
-        />
-        {!location.pathname.startsWith('/book') && (
-          <ul className={`top-menu ${isSideMenuOpen ? 'open' : null}`}>
-            <li>
-              <NavLink to="/all-homes" className="nav-link">
-                All Homes
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/search" className="nav-link">
-                Search
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/register" className="nav-link">
-                Register Your Home
-              </NavLink>
-            </li>
-            <li className="profile-button">
-              <LoginButton />
-            </li>
-          </ul>
-        )}
-      </div>
-    </StyledTopNavBar>
+    <>
+      <MenuProvider />
+      <StyledTopNavBar ref={parentRef}>
+        <div
+          className={backDropClasses}
+          onClick={() => setIsSideMenuOpen(false)}
+        ></div>
+        <div className={navBarClasses}>
+          <Link to="/">
+            <img src={logo} alt="" />
+          </Link>
+          <MenuButton
+            isOpen={isSideMenuOpen}
+            onClick={() => {
+              setIsSideMenuOpen((prev) => !prev);
+            }}
+          />
+          {!location.pathname.startsWith('/book') && (
+            <ul className={`top-menu ${isSideMenuOpen ? 'open' : null}`}>
+              <li>
+                <NavLink to="/all-homes" className="nav-link">
+                  All Homes
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/search" className="nav-link">
+                  Search
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/register" className="nav-link">
+                  Register Your Home
+                </NavLink>
+              </li>
+              <li className="profile-button">
+                <LoginButton />
+              </li>
+            </ul>
+          )}
+        </div>
+      </StyledTopNavBar>
+    </>
   );
 };
 

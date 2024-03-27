@@ -5,7 +5,7 @@ import OwnerAnalytics from '../pages/owner/OwnerAnalytics';
 import OwnerDashboard from '../pages/owner/OwnerDashboard';
 import OwnerHome from '../pages/owner/OwnerHome';
 import OwnerBookings from '../pages/owner/OwnerBookings';
-import HomeContextProvider from '../features/owner/context/HomeContextProvider';
+import { HomeProvider } from '../features/owner/providers/HomeProvider';
 
 const Owner = (
   <Route path="/" element={<OwnerAppLayout />}>
@@ -13,9 +13,9 @@ const Owner = (
     <Route
       path=":ownerHomeId"
       element={
-        <HomeContextProvider>
+        <HomeProvider>
           <OwnerHomeLayout />
-        </HomeContextProvider>
+        </HomeProvider>
       }
     >
       <Route index element={<OwnerDashboard />} />
