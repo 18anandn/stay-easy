@@ -1,0 +1,60 @@
+{
+  "amenities": [
+    {
+      "name": "AC",
+      "type": "essential"
+    },
+    {
+      "name": "Wi-fi",
+      "type": "essential"
+    },
+    {
+      "name": "Heating",
+      "type": "essential"
+    },
+    {
+      "name": "Workspace",
+      "type": "essential"
+    },
+    {
+      "name": "Washing Machine",
+      "type": "essential"
+    },
+    {
+      "name": "TV",
+      "type": "essential"
+    },
+    {
+      "name": "Iron",
+      "type": "essential"
+    },
+    {
+      "name": "Hair dryer",
+      "type": "essential"
+    },
+    {
+      "name": "Pool",
+      "type": "feature"
+    },
+    {
+      "name": "Bath tub",
+      "type": "feature"
+    },
+    {
+      "name": "Free parking",
+      "type": "feature"
+    },
+    {
+      "name": "Gym",
+      "type": "feature"
+    },
+    {
+      "name": "Breakfast",
+      "type": "feature"
+    },
+    {
+      "name": "BBQ grill",
+      "type": "feature"
+    }
+  ]
+}
