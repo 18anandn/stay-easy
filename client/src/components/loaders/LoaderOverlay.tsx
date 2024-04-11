@@ -12,7 +12,7 @@ const Overlay = styled.div`
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.5);
-  font-size: 20dvh;
+  font-size: 20vh;
 `;
 
 const LoaderOverlay: React.FC = () => {

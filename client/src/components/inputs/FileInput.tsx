@@ -79,100 +79,88 @@ const Input: React.FC<Props> = ({ maxFiles, name }) => {
   const { value, onChange } = useContext(FileInputContext);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const processFiles = async (selectedFiles: FileList) => {
+    if (value.length + selectedFiles.length > maxFiles) {
+      toast.error(
+        maxFiles === 1
+          ? 'You can select only one image'
+          : `Max ${maxFiles} images allowed in this field`,
+        {
+          id: 'max files allowed',
+        }
+      );
+      return;
+    }
+    const fileList: File[] = [];
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      console.log(file.size);
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.error(`Max file size allowed is ${MAX_IMAGE_SIZE_KB} KB`, {
+          id: 'file type allowed',
+        });
+        return;
+      }
+    }
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      const data = await new Response(file.slice(0, 12)).arrayBuffer();
+      const bytes = [...new Uint8Array(data)]
+        .map((x) => x.toString(16).padStart(2, '0'))
+        .join('');
+      let newName = `${Date.now()}${i}`;
+      if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        if (!bytes.startsWith(JPEG_NUMBER)) {
+          toast.error(`Invalid image${selectedFiles.length > 1 ? 's' : ''}`, {
+            id: 'file type allowed',
+          });
+          return;
+        }
+        newName += '.jpg';
+      } else if (file.type === 'image/png') {
+        if (!bytes.startsWith(PNG_NUMBER)) {
+          toast.error(`Invalid image${selectedFiles.length > 1 ? 's' : ''}`, {
+            id: 'file type allowed',
+          });
+          return;
+        }
+        newName += '.png';
+      } else if (file.type === 'image/webp') {
+        if (
+          !(bytes.startsWith(WEBP_NUMBER[0]) && bytes.endsWith(WEBP_NUMBER[1]))
+        ) {
+          toast.error(`Invalid image${selectedFiles.length > 1 ? 's' : ''}`, {
+            id: 'file type allowed',
+          });
+          return;
+        }
+        newName += '.webp';
+      } else {
+        toast.error('Only jpeg, png and webp type images are allowed', {
+          id: 'file type allowed',
+        });
+        return;
+      }
+      const newFile = new File([file], newName, {
+        type: file.type,
+      });
+      fileList.push(newFile);
+    }
+    const newFiles = [...fileList, ...value];
+    const dT = new DataTransfer();
+    newFiles.forEach((file) => dT.items.add(file));
+    onChange?.(newFiles);
+  };
+
   const handleChange: ChangeEventHandler<HTMLInputElement> = async () => {
     const inputElem = inputRef.current;
     if (inputElem) {
       const selectedFiles = inputElem.files;
       if (selectedFiles) {
-        if (value.length + selectedFiles.length > maxFiles) {
-          toast.error(
-            maxFiles === 1
-              ? 'You can select only one image'
-              : `Max ${maxFiles} images allowed in this field`,
-            {
-              id: 'max files allowed',
-            },
-          );
-          return;
-        }
-        const fileList: File[] = [];
-        for (let i = 0; i < selectedFiles.length; i++) {
-          const file = selectedFiles[i];
-          console.log(file.size);
-          if (file.size > MAX_IMAGE_SIZE) {
-            toast.error(`Max file size allowed is ${MAX_IMAGE_SIZE_KB} KB`, {
-              id: 'file type allowed',
-            });
-            inputElem.value = '';
-            return;
-          }
-        }
-        for (let i = 0; i < selectedFiles.length; i++) {
-          const file = selectedFiles[i];
-          const data = await new Response(file.slice(0, 12)).arrayBuffer();
-          const bytes = [...new Uint8Array(data)]
-            .map((x) => x.toString(16).padStart(2, '0'))
-            .join('');
-          let newName = `${Date.now()}${i}`;
-          if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
-            if (!bytes.startsWith(JPEG_NUMBER)) {
-              toast.error(
-                `Invalid image${selectedFiles.length > 1 ? 's' : ''}`,
-                {
-                  id: 'file type allowed',
-                },
-              );
-              inputElem.value = '';
-              return;
-            }
-            newName += '.jpg';
-          } else if (file.type === 'image/png') {
-            if (!bytes.startsWith(PNG_NUMBER)) {
-              toast.error(
-                `Invalid image${selectedFiles.length > 1 ? 's' : ''}`,
-                {
-                  id: 'file type allowed',
-                },
-              );
-              inputElem.value = '';
-              return;
-            }
-            newName += '.png';
-          } else if (file.type === 'image/webp') {
-            if (
-              !(
-                bytes.startsWith(WEBP_NUMBER[0]) &&
-                bytes.endsWith(WEBP_NUMBER[1])
-              )
-            ) {
-              toast.error(
-                `Invalid image${selectedFiles.length > 1 ? 's' : ''}`,
-                {
-                  id: 'file type allowed',
-                },
-              );
-              inputElem.value = '';
-              return;
-            }
-            newName += '.webp';
-          } else {
-            toast.error('Only jpeg, png and webp type images are allowed', {
-              id: 'file type allowed',
-            });
-            inputElem.value = '';
-            return;
-          }
-          const newFile = new File([file], newName, {
-            type: file.type,
-          });
-          fileList.push(newFile);
-        }
-        const newFiles = [...fileList, ...value];
-        const dT = new DataTransfer();
-        newFiles.forEach((file) => dT.items.add(file));
-        onChange?.(newFiles);
+        await processFiles(selectedFiles);
       }
       inputElem.value = '';
+      inputElem.files = new DataTransfer().files;
     }
   };
 
@@ -185,7 +173,7 @@ const Input: React.FC<Props> = ({ maxFiles, name }) => {
           inputRef.current?.click();
         }}
       >
-        Select images
+        Select image{maxFiles === 1 ? '' : 's'}
       </Button>
       <input
         ref={inputRef}

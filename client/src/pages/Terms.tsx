@@ -2,11 +2,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 const StyledTerms = styled.div`
-  padding: 2rem 8rem;
-
-  ul {
-    padding-left: 1rem;
-  }
+  padding: 2rem 10%;
 
   h1 {
     margin-bottom: 1rem;

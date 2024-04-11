@@ -13,6 +13,10 @@ const StyledHomeCard = styled(Link).attrs({ className: 'home-card' })`
   text-decoration: none;
   color: inherit;
 
+  & > p {
+    word-wrap: break-word;
+  }
+
   .carousel {
     width: 100%;
     aspect-ratio: 1;

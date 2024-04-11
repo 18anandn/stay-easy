@@ -10,6 +10,7 @@ import { calculatePopupPosition } from '../../utils/popup-funcs';
 import CloseButton from '../../components/buttons/CloseButton';
 import CustomImageCarousel from '../../components/CustomImageCarousel';
 import { getFormattedLocation } from '../../utils/location/format-location';
+import { useGetHoveredHome } from '../../pages/MapSearch/hooks/useHoveredHome';
 
 export const MarkerCss = css`
   .custom-div-icon {
@@ -148,6 +149,7 @@ export const MarkerCss = css`
           z-index: 2;
           top: 6px;
           right: 6px;
+          background-color: white;
         }
 
         .carousel {
@@ -188,7 +190,6 @@ type Props = {
   onClick?: () => void;
   onPopupOpen?: () => void;
   onPopupClose?: () => void;
-  focused?: boolean;
 };
 
 const PriceMarker: React.FC<Props> = ({
@@ -197,11 +198,12 @@ const PriceMarker: React.FC<Props> = ({
   onClick,
   onPopupOpen,
   onPopupClose,
-  focused,
 }) => {
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const popupDimensions = usePopupDimensions();
   const map = useMap();
+  const hoveredHome = useGetHoveredHome();
+  const focused = hoveredHome === home.id;
   const markerRef = useRef<L.Marker>(null);
   const iconRef = useRef<L.DivIcon>(
     divIcon({

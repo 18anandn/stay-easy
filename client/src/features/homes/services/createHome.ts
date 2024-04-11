@@ -1,9 +1,9 @@
 import { Exception } from '../../../data/Exception';
 import { CreateHomeFormData } from '../../../types/CreateHomeFormData';
 
-export const createHotel = async (
+export const createHome = async (
   hotelData: CreateHomeFormData,
-  images: string[],
+  images: string[]
 ) => {
   const { main_image, extra_images, ...requestBody } = hotelData;
   const res2 = await fetch('/api/v1/home/create', {
@@ -26,7 +26,7 @@ const uploadFile = async (
   url: string,
   name: string,
   fields: any,
-  file: File,
+  file: File
 ) => {
   let form = new FormData();
   fields['key'] = name;
@@ -56,9 +56,7 @@ type PresignedPostUrls = {
 
 export const uploadImages = async (images: File[]): Promise<string[]> => {
   const res = await fetch(`/api/v1/home/upload/${images.length}`, {
-    method: 'GET',
     mode: 'cors',
-    cache: 'no-cache',
   });
 
   const data = await res.json();
@@ -71,6 +69,7 @@ export const uploadImages = async (images: File[]): Promise<string[]> => {
   const names = images.map((val) => prefix + val.name);
   for (let i = 0; i < images.length; i++) {
     await uploadFile(url, names[i], fields, images[i]);
+    await new Promise((resolve) => setTimeout(() => resolve(null), 500));
   }
 
   return names;

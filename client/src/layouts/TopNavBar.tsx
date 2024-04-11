@@ -10,8 +10,8 @@ import {
   useScreen,
 } from '../providers/ScreenProvider';
 import MenuButton from '../components/MenuButton';
-import { useShowNavBar } from '../features/nav-bar-scroll/hooks/useShowNavBar';
 import { MenuProvider, useMenu } from '../providers/MenuProvider';
+import { useShowNavBarWithRef } from '../features/nav-bar-scroll/useShowNavBarWithRef';
 
 const StyledTopNavBar = styled.nav`
   height: var(--top-navbar-height);
@@ -44,19 +44,32 @@ const StyledTopNavBar = styled.nav`
 
   .nav-bar {
     height: var(--top-navbar-height);
-    display: flex;
-    align-items: center;
     box-sizing: border-box;
-    padding: 0 5%;
     white-space: nowrap;
     --top-bottom-padding: 1.4rem;
     border-bottom: 1px solid rgb(211, 211, 211);
     background-color: white;
     /* background-color: transparent; */
+
+    .content-container {
+      height: 100%;
+      /* max-width: var(--max-page-width); */
+      padding-inline: var(--padding-inline);
+      margin: auto;
+      display: flex;
+      align-items: center;
+    }
   }
 
-  img {
-    height: 2.5rem;
+  .logo {
+    width: min-content;
+    height: 100%;
+    display: flex;
+    place-items: center;
+
+    img {
+      height: 60%;
+    }
   }
 
   .menu-button {
@@ -64,12 +77,13 @@ const StyledTopNavBar = styled.nav`
   }
 
   .top-menu {
+    width: 29rem;
     margin-left: auto;
     box-sizing: border-box;
     list-style-type: none;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
 
     li {
       &.profile-button {
@@ -84,11 +98,11 @@ const StyledTopNavBar = styled.nav`
 
   .nav-link {
     display: block;
-    padding: 1rem 1rem;
+    padding: 0.8rem;
     font-size: 1rem;
     color: black;
     /* opacity: 0.5; */
-    letter-spacing: 0.1rem;
+    letter-spacing: 0.05rem;
     text-decoration: none;
     border-bottom: 0.2rem solid transparent;
     /* border-radius: 0.8rem; */
@@ -104,7 +118,7 @@ const StyledTopNavBar = styled.nav`
     }
   }
 
-  @media (max-width: ${screenWidths.tab}px) {
+  /* @media (max-width: ${screenWidths.tab}px) {
     .top-menu {
       gap: 0.2rem;
 
@@ -114,9 +128,15 @@ const StyledTopNavBar = styled.nav`
         }
       }
     }
-  }
+  } */
+
+  /* @media (max-width: ${screenWidths.phone}px) { */
 
   @media (max-width: ${screenWidths.phone}px) {
+    --padding-inline: var(--padding-inline-small);
+  }
+
+  @media (max-width: 50rem) {
     img {
       height: 2rem;
     }
@@ -141,12 +161,13 @@ const StyledTopNavBar = styled.nav`
     }
 
     .top-menu {
-      height: calc(100dvh - var(--top-navbar-height));
+      width: auto;
       padding: 1rem;
       box-sizing: border-box;
       position: fixed;
       right: 0;
       top: var(--top-navbar-height);
+      bottom: 0;
       flex-direction: column;
       align-items: start;
       transform: translateX(100%);
@@ -166,7 +187,7 @@ const TopNavBar: React.FC = () => {
   const location = useLocation();
   const [isSideMenuOpen, setIsSideMenuOpen] = useMenu();
   const screen = useScreen();
-  const { parentRef, isNavBarOpen } = useShowNavBar();
+  const { parentRef, isNavBarOpen } = useShowNavBarWithRef();
 
   const navBarClasses = classNames({
     'nav-bar': true,
@@ -180,6 +201,11 @@ const TopNavBar: React.FC = () => {
     show: isSideMenuOpen,
   });
 
+  const topMenuClasses = classNames({
+    'top-menu': true,
+    open: isSideMenuOpen,
+  });
+
   return (
     <>
       <MenuProvider />
@@ -189,37 +215,41 @@ const TopNavBar: React.FC = () => {
           onClick={() => setIsSideMenuOpen(false)}
         ></div>
         <div className={navBarClasses}>
-          <Link to="/">
-            <img src={logo} alt="" />
-          </Link>
-          <MenuButton
-            isOpen={isSideMenuOpen}
-            onClick={() => {
-              setIsSideMenuOpen((prev) => !prev);
-            }}
-          />
-          {!location.pathname.startsWith('/book') && (
-            <ul className={`top-menu ${isSideMenuOpen ? 'open' : null}`}>
-              <li>
-                <NavLink to="/all-homes" className="nav-link">
-                  All Homes
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/search" className="nav-link">
-                  Search
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/register" className="nav-link">
-                  Register Your Home
-                </NavLink>
-              </li>
-              <li className="profile-button">
-                <LoginButton />
-              </li>
-            </ul>
-          )}
+          <div className="content-container">
+            <Link to="/" className="logo">
+              <img src={logo} alt="" />
+            </Link>
+            {!location.pathname.startsWith('/book') && (
+              <>
+                <MenuButton
+                  isOpen={isSideMenuOpen}
+                  onClick={() => {
+                    setIsSideMenuOpen((prev) => !prev);
+                  }}
+                />
+                <ul className={topMenuClasses}>
+                  <li>
+                    <NavLink to="/all-homes" className="nav-link">
+                      All Homes
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="/search" className="nav-link">
+                      Search
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="/register" className="nav-link">
+                      Register Your Home
+                    </NavLink>
+                  </li>
+                  <li className="profile-button">
+                    <LoginButton />
+                  </li>
+                </ul>
+              </>
+            )}
+          </div>
         </div>
       </StyledTopNavBar>
     </>

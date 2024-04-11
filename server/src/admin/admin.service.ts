@@ -11,8 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GetHomeListDto } from './dtos/get-home-list.dto';
 import { UploadService } from '../upload/upload.service';
 import { UpdateHomeDto } from './dtos/update-home.dto';
-import { Verification } from '../home/verification.enum';
 import { DatabaseError } from 'pg-protocol';
+import { VerificationEnum } from '../home/Verification.enum';
 
 @Injectable()
 export class AdminService {
@@ -112,14 +112,12 @@ export class AdminService {
       ...home,
       location: home.location.coordinates.slice().reverse().join(', '),
       owner: `${home.owner.first_name} ${home.owner.last_name}`,
-      main_image: {
-        id: home.main_image.id,
-        url: this.uploadService.getPresignedUrl(home.main_image.object_key),
-      },
-      extra_images: home.extra_images.map((s3file) => ({
-        id: s3file.id,
-        url: this.uploadService.getPresignedUrl(s3file.object_key),
-      })),
+      main_image: this.uploadService.getPresignedUrl(
+        home.main_image.object_key,
+      ),
+      extra_images: home.extra_images.map((s3file) =>
+        this.uploadService.getPresignedUrl(s3file.object_key),
+      ),
       amenities: home.amenities.map((val) => val.name),
     };
   }
@@ -146,9 +144,9 @@ export class AdminService {
       }
       // if()
       switch (verification_status) {
-        case Verification.Approved:
+        case VerificationEnum.Approved:
           if (time_zone && city && state && country && postcode) {
-            home.verification_status = Verification.Approved;
+            home.verification_status = VerificationEnum.Approved;
             home.time_zone = time_zone;
             home.city = city;
             home.state = state;
@@ -160,9 +158,9 @@ export class AdminService {
             );
           }
           break;
-        case Verification.Rejected:
+        case VerificationEnum.Rejected:
           if (message) {
-            home.verification_status = Verification.Rejected;
+            home.verification_status = VerificationEnum.Rejected;
             home.message = message;
           } else {
             throw new BadRequestException('Cannot reject without message');

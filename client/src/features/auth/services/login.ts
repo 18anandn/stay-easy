@@ -1,30 +1,24 @@
-import { Exception } from '../../../data/Exception';
-import { tryCatchWrapper } from '../../../utils/tryCatchWrapper';
-import { LoginCreds } from '../types/LoginCreds';
+import { z } from 'zod';
+import { customFetch } from '../../../utils/customFetch';
+import { Credentials } from '../types/LoginCreds';
+import { UserRole } from '../enums/UserRole.enum';
 
-type LoginRes = {
-  userId: string;
-  role: string;
+const LoginResSchema = z.object({
+  id: z.string().uuid(),
+  role: z.nativeEnum(UserRole),
+});
+
+type LoginRes = z.infer<typeof LoginResSchema>;
+
+export const login = async (creds: Credentials): Promise<LoginRes> => {
+  const data = await customFetch('/api/v1/auth/login', LoginResSchema, {
+    errorMessage: 'There was an unknown error while logging in',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(creds),
+  });
+
+  return data;
 };
-
-export const login = tryCatchWrapper(
-  async (body: LoginCreds): Promise<LoginRes> => {
-    const res = await fetch('/api/v1/auth/login', {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-cache',
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Exception(data.message, res.status);
-    }
-
-    return data;
-  },
-);

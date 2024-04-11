@@ -31,9 +31,6 @@ const Button = styled.button.attrs({
   flex-shrink: 0;
   cursor: pointer;
 
-  &:active {
-  }
-
   ${(props) => {
     if (props.$type === ButtonType.Danger) {
       return css`

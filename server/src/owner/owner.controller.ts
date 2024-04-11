@@ -18,8 +18,19 @@ export class OwnerController {
   }
 
   @Get('/:id')
-  getHomeData(@Param() { id }: UUIDDto, @CurrentUser() owner: CurrentUserDto) {
-    return this.ownerService.getHomeData(id, owner);
+  getVerifiedHomeData(
+    @Param() { id }: UUIDDto,
+    @CurrentUser() owner: CurrentUserDto,
+  ) {
+    return this.ownerService.getVerifiedHomeData(id, owner);
+  }
+
+  @Get('/details/:id')
+  getAnyHomeData(
+    @Param() { id }: UUIDDto,
+    @CurrentUser() owner: CurrentUserDto,
+  ) {
+    return this.ownerService.getAnyHomeData(id, owner);
   }
 
   @Get('/:id/analytics')

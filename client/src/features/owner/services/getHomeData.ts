@@ -1,34 +1,24 @@
-import { Exception } from '../../../data/Exception';
-import { tryCatchWrapper } from '../../../utils/tryCatchWrapper';
+import { z } from 'zod';
+import { VerificationEnum } from '../../../enums/Verification.enum';
+import { OwnerHomeDataBase } from '../types/OwnerHomeDataBase';
+import { customFetch } from '../../../utils/customFetch';
 
-type HomeData = {
-  name: string;
-  city: string;
-  state: string;
-  country: string;
-  address: string;
-  location: [number, number];
-  amenities?: string[];
-  images: string[];
-  revenue: number;
-  total_bookings: number;
+const OwnerHomeDataSchema = z.discriminatedUnion('verification_status', [
+  OwnerHomeDataBase.extend({
+    verification_status: z
+      .literal(VerificationEnum.Pending)
+      .or(z.literal(VerificationEnum.Approved)),
+  }),
+  OwnerHomeDataBase.extend({
+    message: z.string(),
+    verification_status: z.literal(VerificationEnum.Rejected),
+  }),
+]);
+
+type OwnerHomeData = z.infer<typeof OwnerHomeDataSchema>;
+
+export const getHomeData = (id: string): Promise<OwnerHomeData> => {
+  return customFetch(`/api/v1/owner/details/${id}`, OwnerHomeDataSchema, {
+    errorMessage: 'There was an unknown error while fetching the data',
+  });
 };
-
-export const getHomeData = tryCatchWrapper(
-  async (homeId: string): Promise<HomeData> => {
-    const res = await fetch(`/api/v1/owner/${homeId}`, {
-      cache: 'no-cache',
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Exception(
-        data?.message ?? 'There was an error loading the home data.',
-        res.status
-      );
-    }
-
-    return data;
-  }
-);

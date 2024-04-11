@@ -1,27 +1,21 @@
+import { whiteSpaceTrimmer } from '../whiteSpaceTrimmer';
 
-export const latlngVerify = (
-  val: string | null | undefined,
-): string | undefined => {
-  if (!val) return undefined;
-  const errorMessage =
-    'Location must be valid coordinates (Latitude, Longitude)';
-  const latlng = val.replace(' ', '').split(',');
+export const latlngVerify = (str: unknown): boolean => {
+  if (!str) return false;
+  if (typeof str !== 'string') return false;
+  const latlng = str.split(',').map((val) => whiteSpaceTrimmer(val));
+
   if (latlng.length !== 2) {
-    return undefined;
+    return false;
   }
-  if (
-    latlng[0].length === 0 ||
-    isNaN(latlng[0] as any) ||
-    latlng[1].length === 0 ||
-    isNaN(latlng[1] as any)
-  ) {
-    return undefined;
+  if (latlng[0].length === 0 || latlng[1].length === 0) {
+    return false;
   }
 
-  const lat = parseFloat(latlng[0]);
-  const lng = parseFloat(latlng[1]);
-  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-    return undefined;
+  const lat = Number(latlng[0]);
+  const lng = Number(latlng[1]);
+  if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    return false;
   }
-  return val;
+  return true;
 };

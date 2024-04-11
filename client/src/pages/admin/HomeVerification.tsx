@@ -251,7 +251,7 @@ const HomeVerification: React.FC = () => {
                     name="price"
                     autoComplete="off"
                     readOnly
-                    value={moneyFormatter(parseFloat(homeData.price))}
+                    value={moneyFormatter(parseFloat(homeData.price ?? ''))}
                   />
                 </GridCell>
               </>
@@ -266,7 +266,7 @@ const HomeVerification: React.FC = () => {
                     name="price_per_guest"
                     autoComplete="off"
                     readOnly
-                    value={moneyFormatter(parseFloat(homeData.price_per_guest))}
+                    value={moneyFormatter(parseFloat(homeData.price_per_guest ?? ''))}
                   />
                 </GridCell>
               </>

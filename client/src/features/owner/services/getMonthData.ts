@@ -1,51 +1,48 @@
-import { Exception } from '../../../data/Exception';
-import { tryCatchWrapper } from '../../../utils/tryCatchWrapper';
-import { Stats } from '../types/Stats';
-import { StatsWithTotal } from '../types/StatsWithTotal';
+import { z } from 'zod';
+import { StatsSchema } from '../types/Stats';
+import { StatsWithTotalSchema } from '../types/StatsWithTotal';
+import { customFetch } from '../../../utils/customFetch';
 
-export const getMonthData = tryCatchWrapper(
-  async (id: string, year: string): Promise<AnalyticsData> => {
-    const searchParam = new URLSearchParams();
-    searchParam.set('year', year);
-    const res = await fetch(
-      `/api/v1/owner/${id}/analytics?${searchParam.toString()}`,
-      {
-        cache: 'no-cache',
-      }
-    );
+const AnalyticsDataSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  number_of_cabins: z.number({ coerce: true }).int(),
+  number_of_bookings: z.number({ coerce: true }).int(),
+  month_data: z
+    .object({
+      month: z.string(),
+      occupancy: z.number({ coerce: true }).int(),
+      revenue: z.number({ coerce: true }),
+      guests: z.number({ coerce: true }).int(),
+    })
+    .array(),
+  by_month_stats: z.object({
+    occupancy: StatsSchema,
+    revenue: StatsSchema,
+    guests: StatsSchema,
+  }),
+  by_booking_stats: z.object({
+    occupancy: StatsWithTotalSchema,
+    revenue: StatsWithTotalSchema,
+    guests: StatsWithTotalSchema,
+  }),
+});
 
-    const data = await res.json();
+type AnalyticsData = z.infer<typeof AnalyticsDataSchema>;
 
-    if (!res.ok) {
-      throw new Exception(
-        data.message ?? 'There was an error in retrieving the data',
-        res.status
-      );
+export const getMonthData = async (
+  id: string,
+  year: string
+): Promise<AnalyticsData> => {
+  const searchParam = new URLSearchParams();
+  searchParam.set('year', year);
+  const data = await customFetch(
+    `/api/v1/owner/${id}/analytics?${searchParam.toString()}`,
+    AnalyticsDataSchema,
+    {
+      errorMessage: 'There was an error in retrieving the data',
     }
+  );
 
-    return data;
-  }
-);
-
-type AnalyticsData = {
-  id: string;
-  name: string;
-  number_of_cabins: number;
-  number_of_bookings: number;
-  month_data: {
-    month: string;
-    occupancy: number;
-    revenue: number;
-    guests: number;
-  }[];
-  by_month_stats: {
-    occupancy: Stats;
-    revenue: Stats;
-    guests: Stats;
-  };
-  by_booking_stats: {
-    occupancy: StatsWithTotal;
-    revenue: StatsWithTotal;
-    guests: StatsWithTotal;
-  };
+  return data;
 };

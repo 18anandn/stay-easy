@@ -77,7 +77,7 @@ type Props = {
   placeholderSpeacial?: string;
 } & Omit<React.ComponentPropsWithRef<'input'>, 'type' | 'onChange'>;
 
-const SearchInput: React.FC<Props> = forwardRef(
+const SearchInput = forwardRef<HTMLInputElement, Props>(
   ({ value, onValChange, placeholderSpeacial, placeholder, ...rest }, ref) => {
     return (
       <Container>
@@ -103,7 +103,7 @@ const SearchInput: React.FC<Props> = forwardRef(
         )}
       </Container>
     );
-  },
+  }
 );
 
 export default SearchInput;

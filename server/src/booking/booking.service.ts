@@ -44,7 +44,7 @@ export class BookingService {
       home_id: homeId,
       from_date: format(from_date, 'yyyy-MM-dd'),
       to_date: format(to_date, 'yyyy-MM-dd'),
-      user_id: user.userId,
+      user_id: user.id,
       guests,
     };
 
@@ -57,7 +57,7 @@ export class BookingService {
       const data = await this.dataSource.query(query, Object.values(args));
       return data[0];
     } catch (error) {
-      console.log(error)
+      console.log(error);
       if (
         error instanceof QueryFailedError &&
         error.driverError instanceof DatabaseError
@@ -76,7 +76,7 @@ export class BookingService {
 
     let allTrips = this.bookingRepository
       .createQueryBuilder('booking')
-      .where(`booking.user_id = '${user.userId}'`)
+      .where(`booking.user_id = '${user.id}'`)
       .select('booking.id', 'booking_id')
       .addSelect('booking.created_date', 'created_date')
       .addSelect('booking.from_date', 'from_date')
@@ -138,10 +138,7 @@ export class BookingService {
         ? parseInt(bookingList[0].count)
         : 0;
 
-    if (count === 0) {
-      return null;
-    }
-    return {
+    const res = {
       trips:
         count > 0 && bookingList[0].id
           ? bookingList.map((booking) => {
@@ -174,13 +171,15 @@ export class BookingService {
       count,
       items_per_page,
     };
+
+    return res;
   }
 
   async getBooking(bookingId: string, user: CurrentUserDto) {
     const booking = await this.bookingRepository.findOne({
       where: {
         id: bookingId,
-        user_id: user.userId,
+        user_id: user.id,
       },
       relations: {
         home: {

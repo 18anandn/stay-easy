@@ -14,6 +14,10 @@ const StyledSpinnerWithText = styled.span`
     display: flex;
     align-items: center;
     justify-content: center;
+
+    .custom-spinner {
+      font-size: 0.02rem;
+    }
   }
 `;
 

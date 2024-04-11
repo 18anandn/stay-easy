@@ -11,6 +11,7 @@ import {
   CopyObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
+  DeleteObjectsCommand,
   S3Client,
   S3ClientConfig,
 } from '@aws-sdk/client-s3';
@@ -88,7 +89,7 @@ export class UploadService {
     if (number_of_keys < 1) {
       throw new BadRequestException('Send valid number of required urls');
     }
-    const prefix = `request/${user.userId}/${Date.now()}/`;
+    const prefix = `request/${user.id}/${Date.now()}/`;
     // const keys: string[] = [];
     // for (let i = 0; i < number_of_keys; i++) {
     //   keys.push(`${prefix}${crypto.randomBytes(20).toString('hex')}`);
@@ -134,7 +135,7 @@ export class UploadService {
     if (arr.length < 2) {
       throw new BadRequestException('Invalid url sent');
     }
-    if (arr.at(1) !== user.userId) {
+    if (arr.at(1) !== user.id) {
       throw new BadRequestException('User not matching');
     }
     const obj = await this.getObjectBytes(key);
@@ -220,5 +221,17 @@ export class UploadService {
     } else {
       throw new InternalServerErrorException();
     }
+  }
+
+  async deleteImages(keys: string[]) {
+    return this.client.send(
+      new DeleteObjectsCommand({
+        Bucket: this.bucket_name,
+        Delete: {
+          Objects: keys.map((Key) => ({ Key })),
+          Quiet: true,
+        },
+      }),
+    );
   }
 }

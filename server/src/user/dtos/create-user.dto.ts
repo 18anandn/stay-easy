@@ -3,12 +3,12 @@ import { IsEmail, IsNotEmpty, IsString, Length } from "class-validator"
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  @Length(4, 25, { message: 'First name should be 4-25 characters long' })
+  @Length(2, 25, { message: 'First name should be 4-25 characters long' })
   first_name!: string;
 
   @IsString()
   @IsNotEmpty()
-  @Length(4, 25, { message: 'Last name should be 4-25 characters long' })
+  @Length(2, 25, { message: 'Last name should be 4-25 characters long' })
   last_name!: string;
 
   @IsEmail()
@@ -17,6 +17,11 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  @Length(4, 25, { message: 'Password should be 4-10 characters long' })
+  @Length(4, 20, { message: 'Password should be 4-20 characters long' })
   password!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Length(4, 20, { message: 'Confirm password field should be 4-20 characters long' })
+  confirm_password!: string;
 }

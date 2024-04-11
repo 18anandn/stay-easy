@@ -1,5 +1,6 @@
-import { Stats } from './Stats';
+import { z } from 'zod';
+import { StatsSchema } from './Stats';
 
-export type StatsWithTotal = {
-  total: number;
-} & Stats;
+export const StatsWithTotalSchema = StatsSchema.extend({
+  total: z.number({ coerce: true }),
+});

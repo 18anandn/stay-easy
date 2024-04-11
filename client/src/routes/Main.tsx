@@ -7,15 +7,11 @@ import CreateHotel from '../pages/CreateHotel';
 import Explore from '../pages/Explore';
 import HomeInfo from '../pages/HomeInfo';
 import HomePage from '../pages/HomePage';
-import MapSearch from '../pages/MapSearch';
 import Profile from '../pages/Profile';
 import Trip from '../pages/Trip';
 import TripsList from '../pages/TripsList';
-import { lazy } from 'react';
+import MapSearch from '../pages/MapSearch';
 import { Auth } from './Auth';
-
-const Privacy = lazy(() => import('../pages/Privacy'));
-const Terms = lazy(() => import('../pages/Terms'));
 
 const MainRoute = (
   <Route path="/" element={<UserLayout />}>
@@ -33,8 +29,7 @@ const MainRoute = (
     <Route path="all-homes" element={<Explore />} />
     <Route path="home/:homeId" element={<HomeInfo />} />
     <Route path="book/:homeId" element={<Booking />} />
-    <Route path="privacy" element={<Privacy />} />
-    <Route path="terms" element={<Terms />} />
+
     <Route path="user" element={<UserRoute />}>
       <Route index element={<Navigate to="trips" />} />
       <Route path="trips" element={<TripsList />} />

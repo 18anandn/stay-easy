@@ -1,7 +1,6 @@
 import {
   Check,
   Column,
-  CreateDateColumn,
   Entity,
   Generated,
   Index,
@@ -19,7 +18,7 @@ import { Cabin } from '../cabin/cabin.entity';
 import { Booking } from '../booking/booking.entity';
 import { Amenity } from '../amenity/amenity.entity';
 import { S3File } from '../upload/s3file.entity';
-import { Verification } from './verification.enum';
+import { Verification, VerificationEnum } from './Verification.enum';
 
 @Entity('home')
 @Check(
@@ -46,7 +45,11 @@ export class Home {
   @Column({ type: 'boolean', nullable: false, default: false })
   is_sample!: boolean;
 
-  @Column({ type: 'enum', enum: Verification, default: Verification.Pending })
+  @Column({
+    type: 'enum',
+    enum: VerificationEnum,
+    default: VerificationEnum.Pending,
+  })
   verification_status!: Verification;
 
   @Column({ type: 'varchar', length: 50, nullable: false })

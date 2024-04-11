@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CurrentUserDto } from '../user/dtos/current-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Home } from '../home/home.entity';
@@ -18,6 +18,9 @@ import { BookingFilterDto } from './dtos/booking-filter.dto';
 import { BookingFilter } from './enums/BookingFilter';
 import { BookingSort } from './enums/BookingSort';
 import { Booking } from '../booking/booking.entity';
+import { VerificationEnum } from '../home/Verification.enum';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class OwnerService {
@@ -25,19 +28,23 @@ export class OwnerService {
     @InjectRepository(Home) private homeRepository: Repository<Home>,
     private dataSource: DataSource,
     private uploadService: UploadService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async getOwnerHomes(owner: CurrentUserDto) {
     const data = await this.homeRepository.find({
-      where: { owner: { id: owner.userId } },
+      where: { owner: { id: owner.id } },
       select: {
         id: true,
         name: true,
         city: true,
         country: true,
+        address: true,
+        message: true,
         main_image: {
           object_key: true,
         },
+        verification_status: true,
       },
       relations: { main_image: true },
       order: {
@@ -45,17 +52,82 @@ export class OwnerService {
         created_date: 'DESC',
       },
     });
+
+    const homes = data.map((home) => ({
+      ...home,
+      main_image: this.uploadService.getPresignedUrl(
+        home.main_image.object_key,
+      ),
+    }));
+
+    const approved = homes.filter(
+      (val) => val.verification_status === VerificationEnum.Approved,
+    );
+
+    const pending = homes.find(
+      (val) => val.verification_status === VerificationEnum.Pending,
+    );
+
+    const rejected = homes.find(
+      (val) => val.verification_status === VerificationEnum.Rejected,
+    );
+
+    return { approved, pending, rejected };
+  }
+
+  async getVerifiedHomeData(id: string, owner: CurrentUserDto) {
+    const key = `owner-verified-home-data-${owner.id}-${id}`;
+    let data: any = await this.cacheManager.get(key);
+    if (!data) {
+      [data] = await this.dataSource.query(
+        'SELECT * FROM get_verified_home_data($1::uuid, $2::uuid)',
+        [id, owner.id],
+      );
+      if (!data) {
+        throw new NotFoundException('No verified home with the given id');
+      }
+      this.cacheManager.set(key, data, 60000);
+    }
+
+    delete data.id;
+    const { revenue, main_image, extra_images, location, ...rest } = data;
+    const [lat, lng] = location.coordinates.reverse();
+
     return {
-      data: data.map((home) => ({
-        ...home,
-        main_image: this.uploadService.getPresignedUrl(
-          home.main_image.object_key,
-        ),
-      })),
+      ...rest,
+      location: { lat, lng },
+      total_bookings: parseInt(data.total_bookings),
+      revenue: (parseFloat(revenue) * 95) / 100,
+      images: [main_image, ...extra_images].map((object_key) =>
+        this.uploadService.getPresignedUrl(object_key),
+      ),
     };
   }
 
-  async getHomeData(id: string, owner: CurrentUserDto) {
+  async getAnyHomeData(id: string, owner: CurrentUserDto) {
+    const [data] = await this.dataSource.query(
+      'SELECT * FROM get_any_home_data($1::uuid, $2::uuid)',
+      [id, owner.id],
+    );
+
+    if (!data) {
+      throw new NotFoundException('No home with the given id');
+    }
+
+    delete data.id;
+    const { revenue, main_image, extra_images, location, ...rest } = data;
+    const [lat, lng] = location.coordinates.reverse();
+
+    return {
+      ...rest,
+      location: { lat, lng },
+      images: [main_image, ...extra_images].map((object_key) =>
+        this.uploadService.getPresignedUrl(object_key),
+      ),
+    };
+  }
+
+  async getAnyHomeDetails(id: string, owner: CurrentUserDto) {
     const getImagesQueryBuilder = this.homeRepository
       .createQueryBuilder('home')
       .select('array_agg(extra_images.object_key)', 'images')
@@ -80,14 +152,14 @@ export class OwnerService {
       .addSelect('home.city', 'city')
       .addSelect('home.state', 'state')
       .addSelect('home.country', 'country')
-      .addSelect('home.address', 'address')
-      .addSelect('COALESCE(SUM(booking.paid), 0)', 'revenue')
       .addSelect('COALESCE(COUNT(booking.id), 0)', 'total_bookings')
+
+      .addSelect('home.address', 'address')
       .addSelect('main_image.object_key', 'main_image')
       .addSelect('extra_images_table.images', 'extra_images')
       .addSelect('amenities_table.amenities', 'amenities')
       .where('home.id = :homeId', { homeId: id })
-      .andWhere('user.id = :userId', { userId: owner.userId })
+      .andWhere('user.id = :userId', { userId: owner.id })
       .leftJoin('home.owner', 'user')
       .leftJoin('home.bookings', 'booking')
       .leftJoin('home.main_image', 'main_image')
@@ -97,15 +169,16 @@ export class OwnerService {
       .addGroupBy('extra_images_table.images')
       .addGroupBy('amenities_table.amenities')
       .addGroupBy('main_image.object_key')
-      .cache(`owner-home-data-${owner.userId}-${id}`, 60000);
+      .cache(`owner-home-data-${owner.id}-${id}`, 60000);
 
     const data = await queryBuilder.getRawOne();
     delete data.id;
     const { revenue, main_image, extra_images, location, ...rest } = data;
+    const [lat, lng] = location.coordinates.reverse();
 
     return {
       ...rest,
-      location: location.coordinates.reverse(),
+      location: { lat, lng },
       total_bookings: parseInt(data.total_bookings),
       revenue: (parseFloat(revenue) * 95) / 100,
       images: [main_image, ...extra_images].map((object_key) =>
@@ -125,7 +198,7 @@ export class OwnerService {
 
     const [data]: AnalyticsData[] = await this.homeRepository.query(
       'SELECT * FROM get_month_booking_data($1::uuid, $2::uuid, $3::date, $4::date);',
-      [id, owner.userId, start_date, end_date],
+      [id, owner.id, start_date, end_date],
     );
 
     return {
@@ -182,7 +255,7 @@ export class OwnerService {
       .from(Home, 'home')
       .innerJoin('home.owner', 'user')
       .where('home.id = :homeId', { homeId: id })
-      .andWhere('user.id = :ownerId', { ownerId: owner.userId });
+      .andWhere('user.id = :ownerId', { ownerId: owner.id });
 
     let bookingQueryBuilder = this.dataSource
       .createQueryBuilder()

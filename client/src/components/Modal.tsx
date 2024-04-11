@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import CloseButton from './buttons/CloseButton';
 import { createPortal } from 'react-dom';
 
-const modalTransitionDuration = 300;
+const modalTransitionDuration = 200;
 
 const StyledDialog = styled.dialog`
   margin: auto;
@@ -12,8 +12,8 @@ const StyledDialog = styled.dialog`
   outline: none;
   animation: myFadeOut ${modalTransitionDuration}ms ease-out;
   z-index: 10;
-  overflow: visible;
   background-color: transparent;
+  overflow: visible;
 
   &::backdrop {
     background-color: transparent;
@@ -46,9 +46,12 @@ const StyledDialog = styled.dialog`
   }
 
   .content-box {
-    position: relative;
+    max-width: 100svw;
+    max-height: 90svh;
+    overflow: auto;
     box-shadow: 0 0 0 200vw rgba(0, 0, 0, 0.5);
     border-radius: 20px;
+    /* overflow: hidden; */
 
     & > .close-button {
       font-size: 11px;
@@ -57,6 +60,7 @@ const StyledDialog = styled.dialog`
       right: 0;
       z-index: 1;
       transform: translate(-25%, 25%);
+      background-color: white;
     }
   }
 `;
@@ -64,7 +68,7 @@ const StyledDialog = styled.dialog`
 interface Props {
   children: ReactNode;
   isModalOpen: boolean;
-  setIsModalOpen: (val: boolean) => void;
+  setIsModalOpen?: (val: boolean) => void;
   closable?: boolean;
   onClose?: () => void;
 }
@@ -88,14 +92,10 @@ const Modal: React.FC<Props> = ({
           window.innerWidth - document.documentElement.clientWidth + 'px'
         );
         document.body.classList.add('scroll-lock');
-        // disableBodyScroll(document.body, {
-        //   reserveScrollBarGap: true,
-        // });
       } else {
-        (document.activeElement as HTMLElement)?.blur();
+        dialogElement.blur();
         dialogElement.close();
         window.setTimeout(() => {
-          // enableBodyScroll(document.body);
           document.body.classList.remove('scroll-lock');
           document.documentElement.style.removeProperty('--scrollbar-width');
         }, modalTransitionDuration);
@@ -103,22 +103,28 @@ const Modal: React.FC<Props> = ({
     }
   }, [isModalOpen]);
 
+  useEffect(() => {
+    return () => {
+      document.documentElement.style.removeProperty('--scrollbar-width');
+      document.body.classList.remove('scroll-lock');
+    };
+  }, []);
+
   return createPortal(
     <StyledDialog
       ref={dialogRef}
       onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          setIsModalOpen(false);
-          onClose?.();
+        if (event.target === event.currentTarget && closable) {
+          setIsModalOpen?.(false);
         }
       }}
+      onClose={onClose}
     >
       <div className="content-box">
         {closable && (
           <CloseButton
             onClick={() => {
-              setIsModalOpen(false);
-              onClose?.();
+              setIsModalOpen?.(false);
             }}
           />
         )}

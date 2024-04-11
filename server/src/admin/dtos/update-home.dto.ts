@@ -8,7 +8,7 @@ import {
   MinLength,
   NotEquals,
 } from 'class-validator';
-import { Verification } from '../../home/verification.enum';
+import { Verification, VerificationEnum } from '../../home/Verification.enum';
 
 export class UpdateHomeDto {
   @IsOptional()
@@ -34,9 +34,9 @@ export class UpdateHomeDto {
   @IsPostalCode('any')
   postcode?: string;
 
-  @IsEnum(Verification)
+  @IsEnum(VerificationEnum)
   @IsNotEmpty()
-  @NotEquals(Verification.Pending)
+  @NotEquals(VerificationEnum.Pending)
   verification_status!: Verification;
 
   @IsOptional()

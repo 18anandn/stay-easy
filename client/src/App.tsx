@@ -7,6 +7,7 @@ import {
 import styled from 'styled-components';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
+import { lazy } from 'react';
 
 import GlobalStyles from './GlobalStyles';
 import ErrorPage from './pages/ErrorPage';
@@ -18,6 +19,10 @@ import Admin from './routes/Admin';
 import Owner from './routes/Owner';
 import { AuthWithBaseUrl } from './routes/AuthWithBaseUrl';
 
+
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+
 const StyledApp = styled.div``;
 
 const queryClient = new QueryClient({
@@ -25,6 +30,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: Infinity,
       retry: false,
+      retryOnMount: false,
       refetchOnWindowFocus: false,
     },
   },
@@ -67,6 +73,8 @@ function App() {
               />
             }
           />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="terms" element={<Terms />} />
         </Route>
       </>
     )

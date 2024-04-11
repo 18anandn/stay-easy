@@ -1,25 +1,26 @@
-import {
-  ExecutionContext,
-  UnauthorizedException,
-  createParamDecorator,
-} from '@nestjs/common';
-import { CurrentUserDto } from '../dtos/current-user.dto';
+import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import { Request } from 'express';
+import { assertHasUser } from '../assertHasUser';
+import { UserRole } from '../UserRole.enum';
 
 declare global {
   namespace Express {
-    export interface Request {
-      user?: CurrentUserDto;
+    interface User {
+      data?: UserDataInRequest;
+    }
+
+    interface UserDataInRequest {
+      id: string;
+      email: string;
+      role: UserRole;
     }
   }
 }
 
 export const CurrentUser = createParamDecorator(
-  (data: never, context: ExecutionContext): CurrentUserDto => {
+  (data: never, context: ExecutionContext): Express.UserDataInRequest => {
     const req: Request = context.switchToHttp().getRequest();
-    if (!req.user) {
-      throw new UnauthorizedException('Login to continue');
-    }
-    return req.user;
+    assertHasUser(req);
+    return req.user.data;
   },
 );

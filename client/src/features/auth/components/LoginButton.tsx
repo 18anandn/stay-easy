@@ -5,8 +5,9 @@ import { BiSolidUser } from 'react-icons/bi';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import UserNavList from './UserNavList';
 import SpinnerWithText from '../../../components/loaders/SpinnerWithText';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { screenWidths } from '../../../providers/ScreenProvider';
+import { useNavBarIsOpen } from '../../nav-bar-scroll/useNavBar';
 
 const StyledLoginButton = styled.div`
   .login-text {
@@ -54,15 +55,16 @@ const StyledLoginButton = styled.div`
     }
   }
 
-  @media (min-width: ${screenWidths.phone}px) {
+  /* @media (min-width: ${screenWidths.phone}px) { */
+  @media (min-width: 50rem) {
     .user-nav-list {
       height: min-content;
       width: auto;
       position: absolute;
-      left: 50%;
+      left: 100%;
       top: 50%;
       z-index: 2;
-      translate: -50% 2rem;
+      translate: -100% 2rem;
       scale: 0.9;
       opacity: 0;
       pointer-events: none;
@@ -101,7 +103,8 @@ const StyledLoginButton = styled.div`
     }
   }
 
-  @media (max-width: ${screenWidths.phone}px) {
+  /* @media (max-width: ${screenWidths.phone}px) { */
+  @media (max-width: 50rem) {
     button.nav-link {
       display: none;
     }
@@ -140,6 +143,12 @@ const StyledLoginButton = styled.div`
 const LoginButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { currentUser, isLoading } = useCurrentUser();
+  const isTopNabBarOpen = useNavBarIsOpen();
+  const location = useLocation();
+
+  const shouldCurrentPageBeReplaced =
+    location.pathname.startsWith('/signup') ||
+    location.pathname.startsWith('/login');
 
   useEffect(() => {
     if (!currentUser) {
@@ -148,12 +157,16 @@ const LoginButton: React.FC = () => {
   }, [currentUser]);
 
   useEffect(() => {
-    const closeNavList = (event: MouseEvent) => {
+    const closeNavList = () => {
       setIsOpen(false);
     };
 
     document.body.addEventListener('click', closeNavList);
   }, []);
+
+  useEffect(() => {
+    if (!isTopNabBarOpen) setIsOpen(false);
+  }, [isTopNabBarOpen]);
 
   const handleClick: MouseEventHandler = (event) => {
     event.stopPropagation();
@@ -183,11 +196,15 @@ const LoginButton: React.FC = () => {
         </>
       ) : (
         <NavLink
-          to="/login"
+          to={{
+            pathname: '/login',
+            search: shouldCurrentPageBeReplaced ? location.search : undefined,
+          }}
           className={`nav-link ${isLoading ? 'loading' : ''}`}
           onClick={(event) => {
             if (isLoading) event.preventDefault();
           }}
+          replace={shouldCurrentPageBeReplaced}
         >
           <SpinnerWithText text="Login" isLoading={isLoading} />
         </NavLink>

@@ -10,6 +10,12 @@ import { Controller, Get, Query } from '@nestjs/common';
 export class TestController {
   constructor(private testService: TestService) {}
 
+  @Get('protected')
+  @AuthGuard()
+  getProtected() {
+    return { message: 'Accessed!' };
+  }
+
   @Get('create')
   createData() {
     return this.testService.createData();

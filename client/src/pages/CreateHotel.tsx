@@ -8,7 +8,6 @@ import {
 
 import Label from '../components/Label';
 import Input from '../components/inputs/Input';
-import { latlngVerify } from '../utils/location/latlngVerify';
 import ErrorMessage from '../components/ErrorMessage';
 import Asterisk from '../components/Asterisk';
 import InputCounter from '../components/inputs/InputCounter';
@@ -20,14 +19,17 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Spinner from '../components/loaders/Spinner';
 import { preventEnterKeyFormSubmission } from '../utils/preventEnterKeyFormSubmission';
-import { CreateHomeFormData } from '../types/CreateHomeFormData';
 import {
-  createHotel,
-  uploadImages,
-} from '../features/homes/services/createHome';
-import { Exception } from '../data/Exception';
-import { AMENITIES_OPTIONS } from '../data/amenities';
+  CreateHomeFormData,
+  CreateHomeFormDataSchema,
+  MAX_EXTRA_IMAGES,
+} from '../types/CreateHomeFormData';
+import { AMENITIES_OPTIONS } from '../features/homes/data/amenities';
 import { screenWidths } from '../providers/ScreenProvider';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getIndicesOfChar } from '../utils/getIndicesOfChar';
+import { createHome, uploadImages } from '../features/homes/services/createHome';
+import { Exception } from '../data/Exception';
 
 const StyledCreateHotel = styled.div`
   padding: 50px 5%;
@@ -45,7 +47,7 @@ const StyledCreateHotel = styled.div`
 
   form {
     /* width: 60%; */
-    max-width: 800px;
+    max-width: 50rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -156,20 +158,10 @@ const GridCell = styled.div.attrs({ className: 'grid-cell' })<GridCellProps>`
 `;
 
 const StyledAmenities = styled.div`
-  /* padding: 1vh 1vw; */
   background-color: white;
-  /* max-height: 100dvh; */
-  /* width: 50dvw; */
-  /* overflow: hidden; */
-  height: min-content;
-  width: min-content;
+  max-height: 90svh;
   display: flex;
   flex-direction: column;
-  /* box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; */
-
-  /* @media (min-height: 475px) {
-    max-height: 80dvh;
-  } */
 
   .header {
     flex: none;
@@ -200,8 +192,6 @@ const StyledAmenities = styled.div`
 
   .box {
     flex: 0 1 auto;
-    /* max-height: 100dvh; */
-    /* max-height: 80dvh; */
     padding: 20px 50px;
     box-sizing: border-box;
     overflow-y: auto;
@@ -247,17 +237,17 @@ const StyledAmenities = styled.div`
 `;
 
 const StatusBox = styled.div`
-  width: 20rem;
-  padding: 1rem;
+  padding: 1rem 2rem;
   border-radius: 1rem;
   background-color: white;
   font-size: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 
   h3 {
     font-size: 1.5rem;
+    text-align: center;
   }
 
   p {
@@ -284,6 +274,7 @@ const handleHeightChange: ChangeEventHandler<HTMLInputElement> = (event) => {
 const CreateHotel: React.FC = () => {
   const methods = useForm<CreateHomeFormData>({
     defaultValues: { amenities: [] },
+    resolver: zodResolver(CreateHomeFormDataSchema),
   });
   const navigate = useNavigate();
   const [isAmenitiesOpen, setIsAmenitiesOpen] = useState<boolean>(false);
@@ -309,7 +300,7 @@ const CreateHotel: React.FC = () => {
       const images = [...data.main_image, ...data.extra_images];
       const names = await uploadImages(images);
       setMessage('Uploading your home info....');
-      await createHotel(data, names);
+      await createHome(data, names);
       toast.success('Your home was registered successfully');
       navigate('/', { replace: true });
     } catch (error) {
@@ -325,6 +316,39 @@ const CreateHotel: React.FC = () => {
   };
 
   const selectedAmenities = watch('amenities');
+
+  const priceOnChange = (field: 'price' | 'price_per_guest') => {
+    return (event: React.ChangeEvent<HTMLInputElement>) => {
+      let inputValue: string = event.target.value;
+      inputValue = inputValue.replace(/[^0-9.]/g, '');
+      if (inputValue.length === 0) {
+        setValue(field, '');
+        return;
+      }
+      const dotIndices = getIndicesOfChar('.', inputValue);
+      if (dotIndices.length !== 0) {
+        if (dotIndices.length > 1) {
+          inputValue = inputValue.slice(0, dotIndices[1]);
+        }
+        const dotIndex = dotIndices[0];
+        const decimalPart = inputValue.substring(dotIndex + 1);
+        inputValue =
+          inputValue.substring(0, dotIndex + 1) + decimalPart.substring(0, 2); // Limit to two decimal places
+      }
+      setValue(field, inputValue, { shouldValidate: true });
+    };
+  };
+
+  const priceOnBlur = (field: 'price' | 'price_per_guest') => {
+    return (event: React.FocusEvent<HTMLInputElement, Element>) => {
+      let inputValue: string = event.target.value;
+      inputValue = inputValue.replace(/[^0-9.]/g, '');
+      if (inputValue.length === 0) return;
+      setValue(field, parseFloat(inputValue).toString(), {
+        shouldValidate: true,
+      });
+    };
+  };
 
   return (
     <StyledCreateHotel>
@@ -353,13 +377,7 @@ const CreateHotel: React.FC = () => {
                 id="name"
                 autoComplete="off"
                 // defaultValue="Test"
-                {...register('name', {
-                  required: 'Home name is required',
-                  minLength: {
-                    value: 2,
-                    message: 'Home name must be atleast 2 characters long',
-                  },
-                })}
+                {...register('name')}
               />
             </GridCell>
             <GridCell $noteCell={true}>
@@ -389,17 +407,7 @@ const CreateHotel: React.FC = () => {
               </Label>
             </GridCell>
             <GridCell>
-              <Input
-                type="text"
-                id="location"
-                // defaultValue="15.547406880851836, 73.80432026106719"
-                {...register('location', {
-                  required: 'Location is required',
-                  validate: (val) => {
-                    return latlngVerify(val) ? true : 'Invalid coordinates';
-                  },
-                })}
-              />
+              <Input type="text" id="location" {...register('location')} />
             </GridCell>
             <GridCell>
               <Label htmlFor="address">
@@ -418,9 +426,7 @@ const CreateHotel: React.FC = () => {
                 type="text"
                 id="address"
                 // defaultValue='Goa'
-                {...register('address', {
-                  required: 'Address is required',
-                })}
+                {...register('address')}
               />
             </GridCell>
             <GridCell>
@@ -441,30 +447,8 @@ const CreateHotel: React.FC = () => {
                 id="price"
                 defaultValue={''}
                 {...register('price', {
-                  required: 'Price is required',
-                  minLength: 1,
-                  onChange: (event) => {
-                    let inputValue: string = event.target.value;
-                    inputValue = inputValue.replace(/[^0-9.]/g, '');
-                    if (inputValue.length === 0) {
-                      setValue('price', '');
-                      return;
-                    }
-                    const dotIndex = inputValue.indexOf('.');
-                    if (dotIndex !== -1) {
-                      const decimalPart = inputValue.substring(dotIndex + 1);
-                      inputValue =
-                        inputValue.substring(0, dotIndex + 1) +
-                        decimalPart.substring(0, 2); // Limit to two decimal places
-                    }
-                    setValue('price', inputValue);
-                  },
-                  onBlur: (event) => {
-                    let inputValue: string = event.target.value;
-                    inputValue = inputValue.replace(/[^0-9.]/g, '');
-                    if (inputValue.length === 0) return;
-                    setValue('price', parseFloat(inputValue).toString());
-                  },
+                  onChange: priceOnChange('price'),
+                  onBlur: priceOnBlur('price'),
                 })}
               />
             </GridCell>
@@ -486,31 +470,8 @@ const CreateHotel: React.FC = () => {
                 id="price_per_guest"
                 defaultValue={''}
                 {...register('price_per_guest', {
-                  required: 'Price per guest is required',
-                  onChange: (event) => {
-                    let inputValue: string = event.target.value;
-                    inputValue = inputValue.replace(/[^0-9.]/g, '');
-                    if (inputValue.length === 0) {
-                      setValue('price_per_guest', '');
-                      return;
-                    }
-                    const dotIndex = inputValue.indexOf('.');
-                    if (dotIndex !== -1) {
-                      const decimalPart = inputValue.substring(dotIndex + 1);
-                      inputValue =
-                        inputValue.substring(0, dotIndex + 1) +
-                        decimalPart.substring(0, 2); // Limit to two decimal places
-                    }
-                    setValue('price_per_guest', inputValue);
-                  },
-                  onBlur: (event) => {
-                    let inputValue: string = event.target.value;
-                    inputValue = inputValue.replace(/[^0-9.]/g, '');
-                    setValue(
-                      'price_per_guest',
-                      parseFloat(inputValue).toString()
-                    );
-                  },
+                  onChange: priceOnChange('price_per_guest'),
+                  onBlur: priceOnBlur('price_per_guest'),
                 })}
               />
             </GridCell>
@@ -530,12 +491,20 @@ const CreateHotel: React.FC = () => {
               <Controller
                 control={control}
                 name="number_of_cabins"
-                defaultValue={1}
+                defaultValue={
+                  CreateHomeFormDataSchema.shape.number_of_cabins.minValue ?? 1
+                }
                 render={({ field }) => (
                   <InputCounter
                     name="number_of_cabins"
-                    min={1}
-                    max={20}
+                    min={
+                      CreateHomeFormDataSchema.shape.number_of_cabins
+                        .minValue ?? 1
+                    }
+                    max={
+                      CreateHomeFormDataSchema.shape.number_of_cabins
+                        .maxValue ?? 50
+                    }
                     value={field.value}
                     onValChange={(val) => {
                       field.onChange(val);
@@ -551,12 +520,20 @@ const CreateHotel: React.FC = () => {
               <Controller
                 control={control}
                 name="cabin_capacity"
-                defaultValue={1}
+                defaultValue={
+                  CreateHomeFormDataSchema.shape.cabin_capacity.minValue ?? 1
+                }
                 render={({ field }) => (
                   <InputCounter
                     name="cabin_capacity"
-                    min={1}
-                    max={50}
+                    min={
+                      CreateHomeFormDataSchema.shape.cabin_capacity.minValue ??
+                      1
+                    }
+                    max={
+                      CreateHomeFormDataSchema.shape.cabin_capacity.maxValue ??
+                      50
+                    }
                     value={field.value}
                     onValChange={(val) => {
                       field.onChange(val);
@@ -572,13 +549,6 @@ const CreateHotel: React.FC = () => {
               <Button type="button" onClick={() => setIsAmenitiesOpen(true)}>
                 Select amenities
               </Button>
-              <input
-                type="text"
-                id="amenities"
-                readOnly
-                style={{ display: 'none' }}
-                value={selectedAmenities.join(', ')}
-              />
               {selectedAmenities.length > 0 && (
                 <p>{selectedAmenities.join(', ')}</p>
               )}
@@ -657,14 +627,6 @@ const CreateHotel: React.FC = () => {
               control={control}
               name="main_image"
               defaultValue={[]}
-              rules={{
-                validate: (val) => {
-                  if (!val || val.length < 1) {
-                    return 'Please select a main image';
-                  }
-                  return true;
-                },
-              }}
               render={({ field }) => (
                 <FileInput
                   value={field.value}
@@ -697,14 +659,6 @@ const CreateHotel: React.FC = () => {
               control={control}
               name="extra_images"
               defaultValue={[]}
-              rules={{
-                validate: (val) => {
-                  if (!val || val.length < 4) {
-                    return 'Please select atleast 4 extra images';
-                  }
-                  return true;
-                },
-              }}
               render={({ field }) => (
                 <FileInput
                   value={field.value}
@@ -713,7 +667,10 @@ const CreateHotel: React.FC = () => {
                   }}
                 >
                   <GridCell>
-                    <FileInput.Input maxFiles={10} name="extra_images" />
+                    <FileInput.Input
+                      maxFiles={MAX_EXTRA_IMAGES}
+                      name="extra_images"
+                    />
                   </GridCell>
                   <GridCell $fileCell={true}>
                     <FileInput.Display />
@@ -764,7 +721,6 @@ const CreateHotel: React.FC = () => {
           <Button className="submit-button">Submit</Button>
           <Modal
             isModalOpen={submitting}
-            setIsModalOpen={setSubmitting}
             closable={false}
           >
             <StatusBox>
@@ -773,7 +729,6 @@ const CreateHotel: React.FC = () => {
               <Spinner color="black" />
             </StatusBox>
           </Modal>
-          {/* <HotelSubmission /> */}
         </form>
       </FormProvider>
     </StyledCreateHotel>

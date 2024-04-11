@@ -3,7 +3,7 @@ import homePageImage from '../assets/homepage.png';
 import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledHome = styled.div`
-  padding: 0 5%;
+  padding: 2rem 5%;
   display: grid;
   grid-template-columns: 1fr 600px;
   align-items: center;
@@ -21,7 +21,7 @@ const StyledHome = styled.div`
 
   @media (max-width: ${screenWidths.tab}px) {
     /* padding: 10%; */
-    padding: 10% 0;
+    padding: 10% 2rem;
     grid-template-columns: unset;
     grid-template-rows: 1fr 500px;
 

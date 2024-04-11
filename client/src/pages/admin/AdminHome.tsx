@@ -96,7 +96,7 @@ const AdminHome: React.FC = () => {
               {data.homeList.map((home) => (
                 <tr key={home.id}>
                   <td className="home-name">
-                    <Link to={`/admin/home/${home.id}`}>{home.name}</Link>
+                    <Link to={`/home/${home.id}`}>{home.name}</Link>
                   </td>
                   <td className="owner-name">{home.user}</td>
                   <td className="created">

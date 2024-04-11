@@ -9,6 +9,8 @@ const useGetHotels = () => {
     isFetching,
     isFetchingNextPage,
     hasNextPage,
+    isError,
+    error,
   } = useInfiniteQuery({
     queryKey: ['hotels-data'],
     queryFn: ({ pageParam }) => getHomeList(pageParam),
@@ -28,6 +30,8 @@ const useGetHotels = () => {
     isFetching,
     isFetchingNextPage,
     hasNextPage,
+    isError,
+    error,
   };
 };
 

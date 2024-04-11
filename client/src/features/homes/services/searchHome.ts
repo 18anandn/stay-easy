@@ -2,12 +2,14 @@ import { isMatch } from 'date-fns';
 import { LatLng, LatLngBounds } from 'leaflet';
 import { DATE_FORMAT_NUM } from '../../../data/constants';
 import { latlngVerify } from '../../../utils/location/latlngVerify';
-import { AMENITIES_LIST } from '../../../data/amenities';
-import { Exception } from '../../../data/Exception';
+import { AMENITIES_LIST } from '../data/amenities';
 import { getBbox } from '../../../utils/location/getBbox';
-import { tryCatchWrapper } from '../../../utils/tryCatchWrapper';
 import { SearchHomeListParams } from '../types/SearchHomeListParams';
-import { SearchHomeListRes } from '../types/SearchHomeListRes';
+import {
+  SearchHomeListRes,
+  SearchHomeListResSchema,
+} from '../types/SearchHomeListRes';
+import { customFetch } from '../../../utils/customFetch';
 
 export const toSearchHomeURLParams = ({
   address,
@@ -84,8 +86,10 @@ export const getFindHomeParams = (
     distance_str && distance_str.length > 0 && !isNaN(parseInt(distance_str))
       ? distance_str
       : '';
-  const min = latlngVerify(searchParam.get('min')) ?? '';
-  const max = latlngVerify(searchParam.get('max')) ?? '';
+  const min_str = searchParam.get('min');
+  const max_str = searchParam.get('max');
+  const min = min_str && latlngVerify(min_str) ? min_str : '';
+  const max = max_str && latlngVerify(max_str) ? max_str : '';
   const amenities_str = searchParam.get('amenities');
   const amenities_temp = amenities_str
     ? amenities_str
@@ -125,66 +129,54 @@ export const getFindHomeParams = (
   };
 };
 
-let count = 0;
-
-export const searchHomeList = tryCatchWrapper(
-  async (params: SearchHomeListParams): Promise<SearchHomeListRes> => {
-    console.log('here', count++);
-    const searchParams = toSearchHomeURLParams(params);
-    if (searchParams.get('min') && searchParams.has('max')) {
-      searchParams.delete('address');
-    }
-
-    let endPoint = '/api/v1/home/findNearestHomes';
-    if (searchParams.has('address')) {
-      endPoint = '/api/v1/home/findNearestHomesWithAddress';
-    }
-    const res = await fetch(`${endPoint}?${searchParams.toString()}`, {
-      method: 'GET',
-      cache: 'no-cache',
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Exception(
-        data.message ?? 'There was an error while searching',
-        res.status
-      );
-    }
-
-    if (data.homes.length > 0) {
-      data.homes = data.homes.map(
-        (val: { [x: string]: any; location: any }) => {
-          const { location, ...rest } = val;
-          const [lng, lat] = location;
-          return {
-            ...rest,
-            location: new LatLng(lat, lng),
-          };
-        }
-      );
-    }
-
-    data.params = { ...params };
-    if (data.bounds) {
-      data.min = data.bounds[0].reverse().join(',');
-      data.max = data.bounds[1].reverse().join(',');
-      data.params.min = data.min;
-      data.params.max = data.max;
-      if (params.address.length === 0) {
-        data.bounds = new LatLngBounds(data.bounds[0], data.bounds[1]);
-      } else if (data.homes.length > 1) {
-        data.bounds = getBbox(
-          data.homes.map((val: { location: any }) => val.location)
-        );
-      } else if (data.homes.length === 1) {
-        data.bounds = data.homes[0].location;
-      }
-    }
-
-    data.totalPages = Math.ceil(data.count / data.items_per_page);
-
-    return data;
+export const searchHomeList = async (
+  params: SearchHomeListParams
+): Promise<SearchHomeListRes> => {
+  const searchParams = toSearchHomeURLParams(params);
+  if (searchParams.has('min') && searchParams.has('max')) {
+    searchParams.delete('address');
   }
-);
+
+  let endPoint = '/api/v1/home/findNearestHomes';
+  if (searchParams.has('address')) {
+    endPoint = '/api/v1/home/findNearestHomesWithAddress';
+  }
+  const data = await customFetch(
+    `${endPoint}?${searchParams.toString()}`,
+    SearchHomeListResSchema,
+    {
+      errorMessage: 'There was an error while searching',
+    }
+  );
+
+  const { bounds: oldBounds, homes: oldHomes, ...rest } = data;
+
+  const newHomes = oldHomes.map((val) => {
+    const { location, ...restHomeData } = val;
+    return {
+      ...restHomeData,
+      location: new LatLng(location[0], location[1]),
+    };
+  });
+
+  const queryParams = { ...params };
+  let newBounds: LatLngBounds | undefined;
+  if (data.bounds) {
+    // data.min = data.bounds[0].reverse().join(',');
+    // data.max = data.bounds[1].reverse().join(',');
+    queryParams.min = data.bounds[0].join(',');
+    queryParams.max = data.bounds[1].join(',');
+    newBounds = new LatLngBounds(data.bounds[0], data.bounds[1]);
+    if (newHomes.length > 1 && params.address.length !== 0) {
+      newBounds = getBbox(newHomes.map((val) => val.location));
+    }
+  }
+
+  return {
+    ...rest,
+    params: queryParams,
+    homes: newHomes,
+    bounds: newBounds,
+    totalPages: Math.ceil(data.count / data.items_per_page),
+  };
+};

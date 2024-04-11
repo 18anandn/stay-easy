@@ -1,72 +1,149 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-import Form from '../components/Form';
-import FormRow from '../components/FormRow';
 import Label from '../components/Label';
 import Input from '../components/inputs/Input';
 import Button from '../components/buttons/Button';
 import Error from '../components/Error';
-import Loader from '../components/loaders/Loader';
 import SpinnerWithText from '../components/loaders/SpinnerWithText';
 import { useCurrentUser } from '../features/auth/hooks/useCurrentUser';
 import { useLoginUser } from '../features/auth/hooks/useLoginUser';
-import { LoginCreds } from '../features/auth/types/LoginCreds';
 import { Subdomain, getSubdomain } from '../utils/getSubdomain';
 import { screenWidths } from '../providers/ScreenProvider';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import ErrorMessage from '../components/ErrorMessage';
+import { AuthMessage } from '../features/auth/enums/AuthMessage.enum';
+import {
+  CredentialSchema,
+  Credentials,
+} from '../features/auth/types/LoginCreds';
+import { authWithGoogle } from '../features/auth/utils/authWithGoogle';
+import { Exception } from '../data/Exception';
 
-const StyledLogin = styled.div`
-  font-size: 1rem;
+export const StyledLogin = styled.div`
+  padding: 20px var(--padding-inline);
   display: flex;
 
   & > .box {
-    width: 80%;
-    max-width: 450px;
+    width: 90%;
+    min-width: min-content;
+    max-width: 30rem;
     margin: auto;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    justify-content: center;
+    gap: 1rem;
+  }
+
+  .login-form {
+    padding: 1.5rem 1.8rem;
+    border-radius: 1rem;
+    background-color: aliceblue;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .sign-up-link {
+    text-align: center;
+
+    a {
+      color: black;
+    }
+  }
+
+  .custom-button,
+  .google-button {
+    margin: auto;
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
   }
 
   @media (max-width: ${screenWidths.phone}) {
+    padding-inline: 0px;
+
     .box {
       gap: 1rem;
     }
   }
 `;
 
-const emailRegex =
-  /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
 function Login() {
   const { isLoggingIn, login } = useLoginUser();
-  const { currentUser, isLoading } = useCurrentUser();
+  const { currentUser, refetch, isRefetching, isRefetchError, error } =
+    useCurrentUser();
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginCreds>();
+  } = useForm<Credentials>({ resolver: zodResolver(CredentialSchema) });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirectTo');
 
   useEffect(() => {
+    const catchMessage = (event: MessageEvent) => {
+      if (event.data === AuthMessage.SUCCESS) {
+        isRefetchedUser.current = true;
+        refetch();
+      } else {
+        toast.error('Login failed');
+      }
+    };
+
+    window.addEventListener('message', catchMessage);
+
+    return () => window.removeEventListener('message', catchMessage);
+  }, [refetch]);
+
+  const isRefetchedUser = useRef(false);
+
+  useEffect(() => {
     if (currentUser) {
-      if (getSubdomain() === Subdomain.MAIN)
-        navigate.length > 2 ? navigate(-1) : navigate('/', { replace: true });
-      else {
-        window.location.replace('/auth');
+      const redirectUrl = new URLSearchParams(window.location.search).get(
+        'redirectTo'
+      );
+      if (getSubdomain() === Subdomain.MAIN) {
+        if (isRefetchedUser.current) {
+          toast.success('Successfully logged in');
+          navigate(redirectUrl ?? '/', { replace: true });
+        } else {
+          navigate(-1);
+        }
+      } else {
+        let redirectPath = '/auth';
+        if (isRefetchedUser.current) {
+          if (redirectUrl) {
+            const redirectParam = new URLSearchParams();
+            redirectParam.set('redirectTo', redirectUrl);
+            redirectPath += `?${redirectParam.toString()}`;
+          }
+          window.location.replace(redirectPath);
+        } else {
+          window.history.back();
+        }
       }
     }
   }, [currentUser, navigate]);
 
-  const onSubmit: SubmitHandler<LoginCreds> = (data) => {
+  useEffect(() => {
+    if (isRefetchError) {
+      toast.error(error?.message ?? 'There was an unknown error logging in');
+    }
+  }, [isRefetchError, error]);
+
+  const onSubmit: SubmitHandler<Credentials> = (data) => {
     login(data, {
       onSuccess: () => {
         if (getSubdomain() === Subdomain.MAIN) {
+          toast.success('Successfully logged in');
           navigate(redirectUrl ?? '/', { replace: true });
           return;
         }
@@ -78,71 +155,76 @@ function Login() {
         }
         window.location.replace(redirectPath);
       },
+      onError: (error) => {
+        if (error instanceof Exception) toast.error(error.message);
+        else toast.error('There was some error logging in.');
+      },
     });
   };
 
-  if (isLoading) {
-    return (
-      <StyledLogin>
-        <Loader color="black" />
-      </StyledLogin>
-    );
-  }
+  const isBeingLoggedIn = isLoggingIn || isRefetching;
 
   return (
     <StyledLogin>
       <div className="box">
         <h1>{redirectUrl ? 'Login to continue' : 'Login'}</h1>
-        <Form onSubmit={handleSubmit(onSubmit)}>
-          <FormRow>
-            <Label>Email</Label>
+        <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+          <div className="form-row">
+            <Label>
+              {errors?.email?.message ? (
+                <ErrorMessage>{errors.email.message}</ErrorMessage>
+              ) : (
+                'Email'
+              )}
+            </Label>
             <Input
               type="text"
               id="email"
               defaultValue={'test@test.com'}
-              disabled={isLoggingIn}
-              {...register('email', {
-                required: {
-                  value: true,
-                  message: 'Enter your email address',
-                },
-                validate: (value) => {
-                  if (!value.match(emailRegex)) {
-                    return 'Enter valid email address';
-                  }
-                },
-              })}
+              disabled={isBeingLoggedIn}
+              {...register('email')}
             />
-            {errors?.email?.message && <Error data={errors.email.message} />}
-          </FormRow>
-          <FormRow>
-            <Label>Password</Label>
+          </div>
+          <div className="form-row">
+            <Label>
+              {errors?.password?.message ? (
+                <Error data={errors.password.message} />
+              ) : (
+                'Password'
+              )}
+            </Label>
             <Input
               type="password"
               id="password"
               defaultValue={'secret'}
-              disabled={isLoggingIn}
-              {...register('password', {
-                required: {
-                  value: true,
-                  message: 'Password is required',
-                },
-              })}
+              disabled={isBeingLoggedIn}
+              {...register('password')}
             />
-            {errors?.password?.message && (
-              <Error data={errors.password.message} />
-            )}
-          </FormRow>
-          <FormRow $align="center">
-            <Button disabled={isLoggingIn}>
-              <SpinnerWithText
-                isLoading={isLoggingIn}
-                text="Login"
-                color="white"
-              />
-            </Button>
-          </FormRow>
-        </Form>
+          </div>
+          <Button disabled={isBeingLoggedIn} type="submit">
+            <SpinnerWithText
+              isLoading={isBeingLoggedIn}
+              text="Login"
+              color="white"
+            />
+          </Button>
+          <GoogleSignInButton
+            disabled={isBeingLoggedIn}
+            process="Sign in"
+            type="button"
+            className="google-button"
+            onClick={authWithGoogle}
+          />
+          <p className="sign-up-link">
+            Don't have an account?{' '}
+            <Link
+              to={{ pathname: '/signup', search: searchParams.toString() }}
+              replace={true}
+            >
+              Sign up
+            </Link>
+          </p>
+        </form>
       </div>
     </StyledLogin>
   );

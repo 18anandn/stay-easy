@@ -9,20 +9,24 @@ import { dateRangeFormatter } from '../utils/dates/date-range-formatter';
 import Spinner from '../components/loaders/Spinner';
 import Button from '../components/buttons/Button';
 import { getFormattedLocation } from '../utils/location/format-location';
-import { tripsSortOptions } from '../features/booking/services/getTripList';
+import { toUTCDate } from '../utils/dates/toUTCDate';
+import { tripsSortOptionList } from '../features/booking/data/tripSortOptionList';
 
 const StyledTrips = styled.div`
-  padding: 2rem 8rem;
+  padding: 30px 5%;
   display: flex;
   flex-direction: column;
+  gap: 20px;
 
   h1 {
     font-size: 2.2rem;
-    margin-bottom: 1.1rem;
   }
 
   .trips {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 
     .custom-loader {
       font-size: 0.1rem;
@@ -38,7 +42,6 @@ const StyledTrips = styled.div`
       display: flex;
       align-items: center;
       gap: 1.5rem;
-      margin-bottom: 2rem;
       font-size: 1rem;
 
       .react-select {
@@ -48,24 +51,22 @@ const StyledTrips = styled.div`
     }
 
     ul {
-      width: 25rem;
-      margin-bottom: 2rem;
       list-style-type: none;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 25px;
 
       li {
         a {
           display: flex;
-          gap: 1rem;
+          gap: 20px;
           text-decoration: none;
           color: black;
         }
 
         img {
-          height: 6rem;
-          width: 8rem;
+          height: 90px;
+          aspect-ratio: 8 / 6;
           border-radius: 0.7rem;
           object-fit: cover;
         }
@@ -94,9 +95,9 @@ const StyledTrips = styled.div`
 const TripsList: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const sortBy =
-    tripsSortOptions.find(
-      (option) => option.value === searchParams.get('sortBy'),
-    ) ?? tripsSortOptions[0];
+    tripsSortOptionList.find(
+      (option) => option.value === searchParams.get('sortBy')
+    ) ?? tripsSortOptionList[0];
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useGetTripsList(sortBy);
 
@@ -108,14 +109,14 @@ const TripsList: React.FC = () => {
           <Loader color="black" />
         ) : (
           <>
-            {data && data.pages.length !== 0 ? (
+            {data && data.pages[0].count !== 0 ? (
               <>
                 <div className="sortBy">
                   <p>Sort by:</p>
                   <Select
                     className="react-select"
                     value={sortBy}
-                    options={tripsSortOptions}
+                    options={tripsSortOptionList}
                     isSearchable={false}
                     onChange={(option) => {
                       if (option) {
@@ -131,7 +132,7 @@ const TripsList: React.FC = () => {
                 <ul>
                   {data.pages.map((page, pageNum) => (
                     <Fragment key={pageNum}>
-                      {page.trips.map((trip) => (
+                      {page?.trips.map((trip) => (
                         <li key={trip.id}>
                           <Link to={`/user/trip/${trip.id}`}>
                             <img src={trip.home.main_image} alt="" />
@@ -141,13 +142,13 @@ const TripsList: React.FC = () => {
                                 {getFormattedLocation(
                                   trip.home.city,
                                   trip.home.state,
-                                  trip.home.country,
+                                  trip.home.country
                                 )}
                               </p>
                               <p className="dates">
                                 {dateRangeFormatter(
-                                  new Date(trip.from_date),
-                                  new Date(trip.to_date),
+                                  toUTCDate(trip.from_date),
+                                  toUTCDate(trip.to_date)
                                 )}
                               </p>
                             </div>

@@ -14,6 +14,7 @@ import { years } from '../../data/years';
 import ErrorPage from '../ErrorPage';
 import { useHomeName } from '../../features/owner/providers/HomeProvider';
 import { moneyFormatter } from '../../utils/money-formatter';
+import { screenWidths } from '../../providers/ScreenProvider';
 
 const tickFormatter = {
   occupancy: (val: number) => {
@@ -79,6 +80,14 @@ const StyledOwnerAnalytics = styled.div`
 
       h3 {
         text-align: center;
+      }
+    }
+  }
+
+  @media (max-width: ${screenWidths.phone}px) {
+    .by-booking {
+      .bar-charts {
+        display: block;
       }
     }
   }

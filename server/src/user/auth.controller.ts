@@ -1,21 +1,25 @@
 import { AuthService } from './auth.service';
 import { UtilsService } from '../utils/utils.service';
-import { Serialize } from '../interceptors/serialize.interceptor';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { UserDto } from './dtos/user.dto';
 import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Post,
   Req,
   Res,
 } from '@nestjs/common';
-import { LoginUserDto } from './dtos/login-user.dto';
 import { Request, Response } from 'express';
+import { LocalAuthGuard } from './guards/local.authguard';
+import { assertHasUser } from './assertHasUser';
+import {
+  GoogleAuthGuard,
+  GoogleOptionalAuthGuard,
+} from './guards/google.authguard';
+import { isLatLong, isNumber } from 'class-validator';
 
 @Controller('api/v1/auth')
-@Serialize(UserDto)
 export class AuthController {
   constructor(
     private authService: AuthService,
@@ -23,8 +27,13 @@ export class AuthController {
   ) {}
 
   @Get()
-  getLoggedInUser(@Req() req: Request) {
-    return this.authService.getUserFromCookie(req);
+  async getLoggedInUser(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const user = await this.authService.getUserFromCookie(req);
+    if (user) return user;
+    res.sendStatus(HttpStatus.NO_CONTENT);
   }
 
   @Post('/signup')
@@ -34,16 +43,41 @@ export class AuthController {
   }
 
   @Post('/login')
-  async login(
-    @Body() loginUserDto: LoginUserDto,
-    // @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const user = await this.authService.login(loginUserDto);
+  @LocalAuthGuard()
+  async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    assertHasUser(req);
+    const user = req.user.data;
     await this.utilsService.attachTokenToCookies(res, {
-      userId: user.id,
+      id: user.id,
     });
     return user;
+  }
+
+  @Get('/google')
+  @GoogleAuthGuard()
+  handleGoogleAuth() {}
+
+  @Get('/google/redirect')
+  @GoogleOptionalAuthGuard()
+  async handleGoogleRedirect(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (
+      typeof req === 'object' &&
+      req &&
+      'user' in req &&
+      req.user &&
+      'id' in req.user &&
+      req.user.id
+    ) {
+      await this.utilsService.attachTokenToCookies(res, {
+        id: req.user.id,
+      });
+      res.redirect('/login/success');
+      return;
+    }
+    res.redirect('/login/failure');
   }
 
   @Get('/logout')

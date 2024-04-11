@@ -7,34 +7,28 @@ import Loader from '../components/loaders/Loader';
 import ErrorPage from './ErrorPage';
 import { getFormattedLocation } from '../utils/location/format-location';
 import { format } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
 import { moneyFormatter } from '../utils/money-formatter';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { DATE_FORMAT_TEXT } from '../data/constants';
+import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledTrip = styled.div`
-  height: calc(100dvh - var(--top-navbar-height));
+  padding-left: 5%;
 
   .custom-loader {
     font-size: 0.1rem;
   }
 
   .grid-container {
-    height: 100%;
     display: grid;
     grid-template-columns: 40rem 1.5fr;
   }
 
   .left-column {
-    height: 100%;
-    padding: 0 2rem;
-    overflow-x: hidden;
-    overflow-y: auto;
-    /* border: 1px solid red; */
+    padding-block: 1rem;
 
     .back-link {
       display: block;
-      margin-top: 0.5rem;
       font-size: 1.9rem;
       text-decoration: none;
       color: black;
@@ -50,11 +44,11 @@ const StyledTrip = styled.div`
     .home {
       margin-bottom: 1.8rem;
       display: flex;
-      gap: 1rem;
+      gap: 20px;
 
       img {
-        height: 10rem;
-        width: 30rem;
+        height: 150px;
+        aspect-ratio: 3 / 2;
         object-fit: cover;
         object-position: center;
         border-radius: 1rem;
@@ -91,11 +85,55 @@ const StyledTrip = styled.div`
   }
 
   .right-column {
-    /* border: 1px solid red; */
+    min-height: 100%;
+    height: calc(100vh - var(--top-navbar-height));
 
     #map {
+      position: relative;
+      z-index: 0;
       height: 100%;
       width: 100%;
+    }
+  }
+
+  @media (max-width: ${screenWidths.tab}px) {
+    padding-left: 0;
+    padding: 20px 5%;
+
+    .grid-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .right-column {
+      height: auto;
+      width: 100%;
+      aspect-ratio: 1;
+
+      #map {
+        border-radius: 20px;
+        position: relative;
+        z-index: 0;
+        height: 100%;
+        width: 100%;
+      }
+    }
+  }
+
+  @media (max-width: ${screenWidths.phone}px) {
+    .left-column {
+      /* border: 1px solid red; */
+
+      .home {
+        flex-direction: column;
+
+        img {
+          height: auto;
+          width: 100%;
+          aspect-ratio: 1;
+        }
+      }
     }
   }
 `;
@@ -121,7 +159,7 @@ const Trip: React.FC = () => {
                   {getFormattedLocation(
                     data.home.city,
                     data.home.state,
-                    data.home.country,
+                    data.home.country
                   )}
                 </p>
                 {data.home.address && <p>{data.home.address}</p>}
@@ -141,21 +179,11 @@ const Trip: React.FC = () => {
                 </tr>
                 <tr>
                   <td>Check-in</td>
-                  <td>
-                    {format(
-                      utcToZonedTime(data.from_date, data.home.time_zone),
-                      DATE_FORMAT_TEXT,
-                    )}
-                  </td>
+                  <td>{format(data.from_date, DATE_FORMAT_TEXT)}</td>
                 </tr>
                 <tr>
                   <td>Check-out</td>
-                  <td>
-                    {format(
-                      utcToZonedTime(data.to_date, data.home.time_zone),
-                      DATE_FORMAT_TEXT,
-                    )}
-                  </td>
+                  <td>{format(data.to_date, DATE_FORMAT_TEXT)}</td>
                 </tr>
                 <tr>
                   <td>Guests</td>
@@ -169,7 +197,12 @@ const Trip: React.FC = () => {
             </table>
           </div>
           <div className="right-column">
-            <MapContainer id="map" center={data.home.location} zoom={13}>
+            <MapContainer
+              id="map"
+              center={data.home.location}
+              zoom={13}
+              scrollWheelZoom={false}
+            >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"

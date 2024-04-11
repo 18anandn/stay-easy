@@ -19,17 +19,29 @@ import {
 import { CreateHomeDto } from './dtos/create-home.dto';
 import { CurrentUserDto } from '../user/dtos/current-user.dto';
 import { Home } from './home.entity';
-import { User, UserRole } from '../user/user.entity';
+import { User } from '../user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isUUID } from 'class-validator';
 import { FindHomeDto } from './dtos/find-home.dto';
 import { Cabin } from '../cabin/cabin.entity';
 import { Amenity } from '../amenity/amenity.entity';
 import { UploadService } from '../upload/upload.service';
-import { add, format, isMatch, startOfDay, subDays } from 'date-fns';
+import {
+  add,
+  addDays,
+  endOfMonth,
+  format,
+  isMatch,
+  startOfDay,
+  subDays,
+} from 'date-fns';
 import { DATE_FORMAT_NUM } from '../utility/date-funcs';
-import { Verification } from './verification.enum';
 import { DatabaseError } from 'pg-protocol';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { getTimeZoneDifference } from '../utility/getTimeZoneDifference';
+import { S3File } from '../upload/s3file.entity';
+import { UserRoleEnum } from '../user/UserRole.enum';
+import { VerificationEnum } from './Verification.enum';
 
 @Injectable()
 export class HomeService {
@@ -86,24 +98,58 @@ export class HomeService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      const homeRepo = queryRunner.manager.getRepository(Home);
       const userRepo = queryRunner.manager.getRepository(User);
       const userInfo = await userRepo.findOne({
         where: {
-          id: user.userId,
-        },
-        relations: {
-          homes: true,
+          id: user.id,
         },
         lock: { mode: 'pessimistic_write' },
       });
       if (!userInfo) {
         throw new BadRequestException('User does not exist');
       }
-      if (userInfo.homes.length >= 5) {
-        throw new BadRequestException('You can register max 5 homes');
+      const prevHomes = await homeRepo.find({
+        where: { owner_id: userInfo.id },
+        select: {
+          main_image: {
+            object_key: true,
+          },
+          extra_images: {
+            object_key: true,
+          },
+        },
+        relations: { main_image: true, extra_images: true },
+      });
+      if (prevHomes && prevHomes.length !== 0) {
+        if (prevHomes.length >= 5 && userInfo.email !== 'test@test.com') {
+          throw new BadRequestException('You can register max 5 homes');
+        }
+        const pendingHome = prevHomes.find(
+          (val) => val.verification_status === VerificationEnum.Pending,
+        );
+        if (pendingHome) {
+          throw new BadRequestException(
+            'You already have already submitted another home for approval',
+          );
+        }
+        const rejectedHome = prevHomes.find(
+          (val) => val.verification_status === VerificationEnum.Rejected,
+        );
+        if (rejectedHome) {
+          const { main_image, extra_images } = rejectedHome;
+          const imagesToDelete = [main_image, ...extra_images];
+          const imageRepo = queryRunner.manager.getRepository(S3File);
+          await this.uploadService.deleteImages(
+            imagesToDelete.map((image) => image.object_key),
+          );
+          await homeRepo.remove(rejectedHome);
+          await imageRepo.remove(imagesToDelete);
+        }
       }
-      if (userInfo.role === UserRole.USER) {
-        userInfo.role = UserRole.OWNER;
+
+      if (userInfo.role === UserRoleEnum.USER) {
+        userInfo.role = UserRoleEnum.OWNER;
         await userRepo.save(userInfo);
       }
       const query = {
@@ -118,7 +164,7 @@ export class HomeService {
         // state,
         // country,
         // complete_address,
-        owner_id: user.userId,
+        owner_id: user.id,
         amenities: amenities
           ? await queryRunner.manager.getRepository(Amenity).find({
               where: amenities.map((name) => {
@@ -128,7 +174,7 @@ export class HomeService {
           : [],
         description,
       };
-      const home = await queryRunner.manager.getRepository(Home).save(query);
+      const home = await homeRepo.save(query);
 
       const cabinRepo = queryRunner.manager.getRepository(Cabin);
       const cabins: Cabin[] = [];
@@ -145,7 +191,7 @@ export class HomeService {
       home.main_image = files[0];
       files.shift();
       home.extra_images = files;
-      await queryRunner.manager.getRepository(Home).save(home);
+      await homeRepo.save(home);
       await queryRunner.commitTransaction();
       return home;
     } catch (error) {
@@ -210,18 +256,39 @@ export class HomeService {
     if (!home) {
       throw new NotFoundException(`There was no home with id: ${homeId}`);
     }
-    const bookings = home.cabins.map((cabin) =>
+    const bookings: [Date, Date][][] = home.cabins.map((cabin) =>
       cabin.bookings.map((booking) => [booking.from_date, booking.to_date]),
     );
-    const { cabins, main_image, extra_images, ...rest } = home;
+    const { cabins, main_image, extra_images, time_zone, ...rest } = home;
+    const minDate = addDays(
+      startOfDay(
+        utcToZonedTime(zonedTimeToUtc(new Date(), 'UTC'), home.time_zone),
+      ),
+      1,
+    );
+    const maxDate = startOfDay(
+      endOfMonth(add(minDate, { years: 1, months: 1 })),
+    );
+
+    const coords = home.location.coordinates.slice();
     return {
       ...rest,
+      time_zone: {
+        name: time_zone,
+        offset: getTimeZoneDifference(time_zone),
+      },
+      id: homeId,
       images: [main_image, ...extra_images].map((image) =>
         this.uploadService.getPresignedUrl(image.object_key),
       ),
-      location: home.location.coordinates.slice().reverse(),
+      location: {
+        lat: coords[1],
+        lng: coords[0],
+      },
       amenities: home.amenities.map((amenity) => amenity.name),
       bookings,
+      minDate: format(minDate, DATE_FORMAT_NUM),
+      maxDate: format(maxDate, DATE_FORMAT_NUM),
     };
   }
 
@@ -303,13 +370,6 @@ export class HomeService {
       sortBy: sortBy ?? null,
     };
 
-    // const args_str = Object.values(args).map((val) => {
-    //   if (!val) return 'NULL';
-    //   if (typeof val === 'number') return val;
-    //   return `'${val}'`;
-    // })
-    // .join(',');
-
     try {
       const [{ data, count }] = await this.dataSource.query<FindHomesResult[]>(
         `SELECT * from find_homes($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
@@ -320,13 +380,19 @@ export class HomeService {
         const { main_image, extra_images, location, ...rest } = home;
         return {
           ...rest,
-          location: JSON.parse(location).coordinates,
+          location: JSON.parse(location).coordinates.reverse(),
           images: [main_image, ...extra_images].map((val) =>
             this.uploadService.getPresignedUrl(val),
           ),
         };
       });
-      return { homes, bounds, items_per_page, count: parseInt(count) };
+      const res = {
+        homes,
+        bounds: bounds?.slice().map((val) => val.slice().reverse()),
+        items_per_page,
+        count: parseInt(count),
+      };
+      return res;
     } catch (error) {
       console.log(error);
       if (
@@ -345,7 +411,7 @@ export class HomeService {
     const items_per_page = 10;
     const current_page = page ?? 1;
     const [homes, count] = await this.homeRepository.findAndCount({
-      where: { verification_status: Verification.Approved },
+      where: { verification_status: VerificationEnum.Approved },
       select: {
         id: true,
         number: true,
@@ -390,17 +456,9 @@ export class HomeService {
         images: [home.main_image, ...home.extra_images].map((image) =>
           this.uploadService.getPresignedUrl(image.object_key),
         ),
-        // main_image: {
-        //   id: home.main_image.id,
-        //   url: this.uploadService.getPresignedUrl(home.main_image.object_key),
-        // },
-        // extra_images: home.extra_images.map((image) => ({
-        //   id: image.id,
-        //   url: this.uploadService.getPresignedUrl(image.object_key),
-        // })),
       };
     });
-    return { homes: arr, totalPages: Math.ceil(count / items_per_page) };
+    return { homes: arr, count, items_per_page };
   }
 
   // async updateHome(
@@ -415,7 +473,7 @@ export class HomeService {
   //   if (!home) {
   //     throw new NotFoundException(`No home with id: ${homeId}`);
   //   }
-  //   if (home.owner_id !== user.userId) {
+  //   if (home.owner_id !== user.id) {
   //     throw new UnauthorizedException('Unauthorized action.');
   //   }
   //   home.name = name ?? home.name;

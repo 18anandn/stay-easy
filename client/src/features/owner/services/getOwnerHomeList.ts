@@ -1,29 +1,41 @@
-import { Exception } from '../../../data/Exception';
-import { tryCatchWrapper } from '../../../utils/tryCatchWrapper';
+import { z } from 'zod';
+import { customFetch } from '../../../utils/customFetch';
 
-export type OwnerHomeInfo = {
-  id: string;
-  name: string;
-  main_image: string;
-  city: string;
-  country: string;
+const OwnerHomeListInfoSchema = z.object({
+  approved: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      main_image: z.string(),
+      city: z.string(),
+      country: z.string(),
+    })
+    .array(),
+  pending: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      main_image: z.string(),
+      address: z.string(),
+    })
+    .optional(),
+  rejected: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      main_image: z.string(),
+      address: z.string(),
+      message: z.string(),
+    })
+    .optional(),
+});
+
+type OwnerHomeListInfo = z.infer<typeof OwnerHomeListInfoSchema>;
+
+export const getOwnerHomeList = async (): Promise<OwnerHomeListInfo> => {
+  const data = await customFetch('/api/v1/owner', OwnerHomeListInfoSchema, {
+    errorMessage: 'There was an error loading your homes.',
+  });
+
+  return data;
 };
-
-export const getOwnerHomeList = tryCatchWrapper(
-  async (): Promise<OwnerHomeInfo[]> => {
-    const res = await fetch('/api/v1/owner', {
-      cache: 'no-cache',
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Exception(
-        data?.message ?? 'There was an error loading your homes.',
-        res.status,
-      );
-    }
-
-    return data.data;
-  },
-);

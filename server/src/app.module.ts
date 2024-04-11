@@ -29,6 +29,9 @@ import { NotFoundModule } from './not-found/not-found.module';
 import { OwnerModule } from './owner/owner.module';
 import express from 'express';
 import { ServeStaticMiddleware } from './middlewares/serve-static.middleware';
+import { CacheModule, CacheStore } from '@nestjs/cache-manager';
+import { RedisClientOptions } from 'redis';
+import { redisStore } from 'cache-manager-redis-yet';
 
 @Module({
   imports: [
@@ -38,6 +41,24 @@ import { ServeStaticMiddleware } from './middlewares/serve-static.middleware';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env`,
+    }),
+    CacheModule.registerAsync<RedisClientOptions>({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const store = await redisStore({
+          socket: {
+            host: configService.getOrThrow('QUEUE_HOST'),
+            port: configService.getOrThrow('QUEUE_PORT'),
+          },
+          username: configService.getOrThrow('QUEUE_USER'),
+          password: configService.getOrThrow('QUEUE_PASSWORD'),
+        });
+        return {
+          store,
+        };
+      },
+      inject: [ConfigService],
     }),
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => {
@@ -50,15 +71,15 @@ import { ServeStaticMiddleware } from './middlewares/serve-static.middleware';
           database: configService.getOrThrow('DB_NAME'),
           autoLoadEntities: true,
           useUTC: true,
-          cache: {
-            type: 'ioredis',
-            options: {
-              host: configService.getOrThrow('QUEUE_HOST'),
-              port: configService.getOrThrow('QUEUE_PORT'),
-              username: configService.getOrThrow('QUEUE_USER'),
-              password: configService.getOrThrow('QUEUE_PASSWORD'),
-            },
-          },
+          // cache: {
+          //   type: 'ioredis',
+          //   options: {
+          //     host: configService.getOrThrow('QUEUE_HOST'),
+          //     port: configService.getOrThrow('QUEUE_PORT'),
+          //     username: configService.getOrThrow('QUEUE_USER'),
+          //     password: configService.getOrThrow('QUEUE_PASSWORD'),
+          //   },
+          // },
           synchronize: configService.getOrThrow('NODE_ENV') === 'development',
         };
       },

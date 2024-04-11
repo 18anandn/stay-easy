@@ -1,7 +1,7 @@
-import styled from 'styled-components'
+import styled from 'styled-components';
 
 const StyledPrivacy = styled.div`
-  padding: 2rem 8rem;
+  padding: 2rem 10%;
 
   h1 {
     margin-bottom: 1rem;
@@ -10,6 +10,7 @@ const StyledPrivacy = styled.div`
   h2 {
     margin: 1.5rem 0 0.5rem 0;
   }
+  
   ol {
     /* list-style-position: inside; */
 
@@ -21,7 +22,7 @@ const StyledPrivacy = styled.div`
       margin-bottom: 1rem;
     }
   }
-`
+`;
 
 const Privacy: React.FC = () => {
   return (
@@ -168,12 +169,9 @@ const Privacy: React.FC = () => {
         at <a href="18anandn@gmail.com">18anandn@gmail.com</a>.
       </p>
 
-      <p>
-        Thank you for trusting YStayEasy with your
-        accommodation needs.
-      </p>
+      <p>Thank you for trusting YStayEasy with your accommodation needs.</p>
     </StyledPrivacy>
   );
-}
+};
 
-export default Privacy
+export default Privacy;

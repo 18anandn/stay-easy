@@ -17,8 +17,7 @@ import { Amenity } from '../amenity/amenity.entity';
 import { Home } from '../home/home.entity';
 import { CurrentUserDto } from '../user/dtos/current-user.dto';
 import { Cabin } from '../cabin/cabin.entity';
-import { User, UserRole } from '../user/user.entity';
-import { Verification } from '../home/verification.enum';
+import { User } from '../user/user.entity';
 import { Test } from './test.entity';
 import {
   addDays,
@@ -26,6 +25,8 @@ import {
   endOfYear,
   startOfYear,
 } from 'date-fns';
+import { VerificationEnum } from '../home/Verification.enum';
+import { UserRoleEnum } from '../user/UserRole.enum';
 
 const PAGE_SIZE = 50;
 
@@ -98,7 +99,7 @@ export class TestService {
         const home = await homeRepo.save(
           homeRepo.create({
             is_sample: true,
-            verification_status: Verification.Approved,
+            verification_status: VerificationEnum.Approved,
             name: row.name,
             price: (parseFloat(row.price) * 105) / 100,
             price_per_guest: (parseFloat(row.price_per_guest) * 105) / 100,
@@ -117,7 +118,7 @@ export class TestService {
             description: row.description,
             postcode: row.postcode,
             time_zone: row.time_zone,
-            owner_id: user.userId,
+            owner_id: user.id,
             number_of_cabins: parseInt(row.number_of_cabins),
             cabin_capacity: parseInt(row.cabin_capacity),
             amenities: all_amenities.filter((amenity) =>
@@ -132,7 +133,7 @@ export class TestService {
         await cabinRepo.save(cabins);
         await queryRunner.manager
           .getRepository(User)
-          .update({ id: user.userId }, { role: UserRole.OWNER });
+          .update({ id: user.id }, { role: UserRoleEnum.OWNER });
         home.main_image = await fileRepo.findOneByOrFail({
           object_key: ILike(row.images[0]),
         });

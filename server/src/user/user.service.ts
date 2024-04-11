@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException, Body } from '@nestjs/common';
-import { User, UserRole } from './user.entity';
+import { User} from './user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UserRoleEnum } from './UserRole.enum';
 
 @Injectable()
 export class UserService {
@@ -34,7 +35,7 @@ export class UserService {
   updateOwner = (userId: string) => {
     return this.usersRepository.update(
       { id: userId },
-      { role: UserRole.OWNER },
+      { role: UserRoleEnum.OWNER },
     );
   };
 }

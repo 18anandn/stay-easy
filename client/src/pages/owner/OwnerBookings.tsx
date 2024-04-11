@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import Select from 'react-select';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import ResponsivePagination from 'react-responsive-pagination';
 
 import { useGetBookingList } from '../../features/owner/hooks/useGetBookingList';
@@ -13,12 +13,21 @@ import Spinner from '../../components/loaders/Spinner';
 import ErrorPage from '../ErrorPage';
 import { DATE_FORMAT_TEXT } from '../../data/constants';
 import { useHomeName } from '../../features/owner/providers/HomeProvider';
+import { screenWidths } from '../../providers/ScreenProvider';
 
 const StyledOwnerBookings = styled.div`
-  display: flex;
+  /* display: flex;
   flex-direction: column;
+  align-items: stretch; */
   gap: 2rem;
   position: relative;
+  /* max-width: 100%; */
+  display: grid;
+  grid-template-columns: 100%;
+  grid-auto-rows: min-content;
+  align-items: start;
+  grid-auto-flow: row;
+  gap: 2rem;
 
   .custom-spinner {
     position: absolute;
@@ -26,27 +35,36 @@ const StyledOwnerBookings = styled.div`
 
   .option-list {
     display: flex;
-    gap: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 
     .option {
+      width: max-content;
       flex: 0 0 auto;
       display: flex;
       align-items: center;
       gap: 1rem;
 
-      p {
+      /* p {
         white-space: nowrap;
+      } */
+
+      .select-box__menu {
+        min-width: 100%;
+        width: max-content;
       }
 
       &.filter {
         .select-box {
-          width: 13.2rem;
+          /* width: 13.2rem; */
+          /* width: 100%; */
+          /* width: max-content; */
         }
       }
 
       &.sort {
         .select-box {
-          width: 11rem;
+          /* width: 11rem; */
         }
       }
     }
@@ -57,59 +75,132 @@ const StyledOwnerBookings = styled.div`
   }
 
   .table {
+    /* width: 100%;
+    overflow-x: scroll; */
+    /* max-width: 100%; */
+    /* padding-block: 1rem; */
+    overflow-x: auto;
+    /* display: grid;
+    grid-template-columns: 100%; */
+
     table {
-      border-radius: 1rem;
-      overflow: hidden;
       margin: 0 auto;
       /* width: 50%; */
       /* table-layout: fixed; */
       /* width: 100%; */
       border-collapse: collapse;
-      column-gap: 2rem;
+      /* overflow: hidden; */
 
       /* th:nth-child() */
 
-      tbody {
+      th,
+      td {
+        padding: 1rem 1.5rem;
+        border: 1px solid black;
+      }
+
+      tr:nth-child(even) {
+        background-color: #fffeff;
+      }
+
+      tr:nth-child(odd) {
+        background-color: #f5f4f5;
+      }
+
+      tr:nth-child(1) {
+        color: white;
+        background-color: #343334;
+      }
+
+      td:nth-child(1) {
+        text-align: right;
+      }
+
+      td:nth-child(2) {
+        max-width: 9rem;
+        hyphens: auto;
+        /* word-break: break-all; */
+      }
+
+      td:nth-child(3),
+      td:nth-child(4),
+      td:nth-child(5) {
+        text-align: right;
+        font-family: 'Courier New', monospace;
+      }
+
+      td:nth-child(5) {
+        text-align: center;
+      }
+    }
+  }
+
+  @media (max-width: ${screenWidths.tab}px) {
+    .table {
+      table {
         th,
         td {
-          padding: 1rem 2rem;
-          /* border: 1px solid black; */
+          padding: 0.8rem;
+        }
+      }
+    }
+  }
+
+  @media (max-width: ${screenWidths.phone}px) {
+    gap: 1rem;
+
+    .table {
+      table,
+      tbody,
+      tr,
+      th,
+      td {
+        display: block;
+      }
+
+      table {
+        th {
+          display: none;
         }
 
-        tr:nth-child(even) {
-          background-color: #fffeff;
+        tr:first-child {
+          display: none;
         }
 
-        tr:nth-child(odd) {
-          background-color: #f5f4f5;
+        tr {
+          padding: 1rem 0.5rem;
         }
 
-        tr:nth-child(1) {
-          color: white;
-          background-color: #343334;
+        td {
+          /* word-break: break-all; */
+          padding: 0;
+          padding-block: 0.2rem;
+          display: grid;
+          grid-template-columns: 13ch auto;
+          font-family: 'Open Sans', sans-serif;
+          border: none;
         }
 
-        th:nth-child(1) {
-          width: 1rem;
+        td::before {
+          content: attr(data-cell) ': ';
+          text-transform: capitalize;
+        }
+
+        td:nth-child(1) {
+          display: none;
         }
 
         td:nth-child(2) {
-          max-width: 10rem;
+          /* height: 3rem; */
+          /* hyphens: auto; */
+          max-width: unset;
         }
 
         td:nth-child(3),
         td:nth-child(4),
         td:nth-child(5) {
-          text-align: right;
-          font-family: 'Courier New', monospace;
-        }
-
-        td:nth-child(1) {
-          text-align: right;
-        }
-
-        td:nth-child(5) {
-          text-align: center;
+          font-family: 'Open Sans', sans-serif;
+          text-align: left;
         }
       }
     }
@@ -164,6 +255,7 @@ const OwnerBookings: React.FC = () => {
             <p>Filter: </p>{' '}
             <Select
               className="select-box"
+              classNamePrefix="select-box"
               options={bookingFilterOptionList}
               isDisabled={isLoading}
               isSearchable={false}
@@ -234,15 +326,17 @@ const OwnerBookings: React.FC = () => {
                   </tr>
                   {data.bookingList.map((booking, index) => (
                     <tr key={booking.id}>
-                      <td>{index + 1}.</td>
-                      <td>{booking.user}</td>
                       <td>
-                        {format(parseISO(booking.from_date), DATE_FORMAT_TEXT)}
+                        <span>{index + 1}.</span>
                       </td>
-                      <td>
-                        {format(parseISO(booking.to_date), DATE_FORMAT_TEXT)}
+                      <td data-cell="guest name">{booking.user}</td>
+                      <td data-cell="check-in">
+                        {format(booking.from_date, DATE_FORMAT_TEXT)}
                       </td>
-                      <td>{booking.id}</td>
+                      <td data-cell="check-out">
+                        {format(booking.to_date, DATE_FORMAT_TEXT)}
+                      </td>
+                      <td data-cell="booking iD">{booking.id}</td>
                     </tr>
                   ))}
                 </tbody>

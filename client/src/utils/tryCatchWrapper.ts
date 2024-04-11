@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { Exception } from '../data/Exception';
 
 export const tryCatchWrapper = <T extends Array<unknown>, U>(
@@ -10,6 +11,9 @@ export const tryCatchWrapper = <T extends Array<unknown>, U>(
       console.log(error);
       if (error instanceof Exception) {
         throw error;
+      }
+      if (error instanceof z.ZodError) {
+        throw new Exception('There was an unknown server error', 500);
       }
       if (error instanceof TypeError) {
         throw new Exception('There was a connection problem', 0);

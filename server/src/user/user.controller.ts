@@ -15,7 +15,7 @@ export class UserController {
   @Get('/profile')
   @AuthGuard()
   getCurrentUserInfo(@CurrentUser() user: CurrentUserDto) {
-    return this.userService.findById(user.userId);
+    return this.userService.findById(user.id);
   }
 
   @Get('/:userId')
@@ -28,6 +28,6 @@ export class UserController {
     @Body() body: UpdateUserDto,
     @CurrentUser() user: CurrentUserDto,
   ) {
-    return this.userService.updateUser(body, user.userId);
+    return this.userService.updateUser(body, user.id);
   }
 }

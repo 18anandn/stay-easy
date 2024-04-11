@@ -6,6 +6,11 @@ import { join } from 'path';
 export class ServeStaticMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // Specify the directory to serve static files from
-    express.static(join(process.cwd(), 'front-end'))(req, res, next);
+    console.log('inside', join(process.cwd(), 'front-end'));
+    express.static(join(process.cwd(), 'front-end'), { dotfiles: 'ignore' })(
+      req,
+      res,
+      next,
+    );
   }
 }

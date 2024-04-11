@@ -20,6 +20,5 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true
   },
-  "include": ["src", "front-end"],
-  "exclude": ["client"]
+  "include": ["src"],
 }

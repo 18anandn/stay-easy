@@ -1,27 +1,26 @@
-import { LatLng, LatLngBounds } from 'leaflet';
-import { useEffect, useRef, useState } from 'react';
+import { LatLngBounds } from 'leaflet';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ZoomControl, useMapEvents } from 'react-leaflet';
 import { goToPosition } from '../../utils/location/goToPosition';
 
 type Props = {
-  initialBounds?: LatLngBounds | LatLng;
-  yourBounds?: LatLngBounds | LatLng;
+  // initialBounds?: LatLngBounds | LatLng;
+  isDisplayed: boolean;
+  yourBounds?: LatLngBounds;
   onBoundsChange?: (bounds: LatLngBounds) => void;
 };
 
 const SetBounds: React.FC<Props> = ({
-  initialBounds,
+  isDisplayed,
   yourBounds,
   onBoundsChange,
 }) => {
-  const firstRender = useRef<boolean>(true);
+  const mapIsHiddenRef = useRef<boolean>(isDisplayed);
   const allowMoveEndTrigger = useRef<boolean>(false);
   const allowZoomEndTrigger = useRef<boolean>(false);
   const mapResizeTrackerRef = useRef<boolean>(false);
   const [allowZoom, setAllowZoom] = useState<boolean>(true);
-  const boundsTracker = useRef<LatLngBounds | LatLng | undefined>(
-    initialBounds,
-  );
+  const boundsTracker = useRef<LatLngBounds | undefined>();
   const prevZoomRef = useRef<number>(10);
 
   const map = useMapEvents({
@@ -74,7 +73,6 @@ const SetBounds: React.FC<Props> = ({
         allowZoomEndTrigger.current = true;
         allowMoveEndTrigger.current = true;
       }
-
       setAllowZoom(true);
       map.getContainer().style.pointerEvents = 'auto';
     },
@@ -113,27 +111,39 @@ const SetBounds: React.FC<Props> = ({
     },
   });
 
+  useLayoutEffect(() => {
+    if (isDisplayed) {
+      map.invalidateSize();
+    }
+  }, [map, isDisplayed]);
+
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      prevZoomRef.current = map.getZoom();
-      map.invalidateSize({ pan: false });
-      const goToBounds = yourBounds ?? boundsTracker.current;
-      if (goToBounds) {
+    // if (mapIsHiddenRef.current) {
+    //   mapIsHiddenRef.current = false;
+    //   prevZoomRef.current = map.getZoom();
+    //   map.invalidateSize({ pan: false });
+    //   const goToBounds = yourBounds ?? boundsTracker.current;
+    //   if (goToBounds) {
+    //     allowMoveEndTrigger.current = false;
+    //     allowZoomEndTrigger.current = false;
+    //     goToPosition(goToBounds, map, false);
+    //     boundsTracker.current = goToBounds;
+    //   }
+    // } else
+    if (isDisplayed) {
+      if (yourBounds) {
         allowMoveEndTrigger.current = false;
         allowZoomEndTrigger.current = false;
-        goToPosition(goToBounds, map, false);
-        boundsTracker.current = goToBounds;
+        boundsTracker.current = yourBounds;
+        map.getContainer().style.pointerEvents = 'none';
+        setAllowZoom(false);
+        goToPosition(yourBounds, map, !mapIsHiddenRef.current);
+        mapIsHiddenRef.current = false;
       }
-    } else if (yourBounds) {
-      allowMoveEndTrigger.current = false;
-      allowZoomEndTrigger.current = false;
-      boundsTracker.current = yourBounds;
-      goToPosition(yourBounds, map, true);
-      setAllowZoom(false);
-      map.getContainer().style.pointerEvents = 'none';
+    } else {
+      mapIsHiddenRef.current = true;
     }
-  }, [yourBounds, map]);
+  }, [isDisplayed, yourBounds, map]);
 
   return allowZoom ? <ZoomControl /> : null;
 };

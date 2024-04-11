@@ -1,8 +1,9 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import { getTripList, tripsSortOptions } from '../services/getTripList';
+import { getTripList } from '../services/getTripList';
+import { TripSortOption } from '../types/TripSortOption';
 
-export const useGetTripsList = (sortBy: (typeof tripsSortOptions)[number]) => {
+export const useGetTripsList = (sortBy: TripSortOption) => {
   const {
     data,
     fetchNextPage,

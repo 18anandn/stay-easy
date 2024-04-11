@@ -1,4 +1,4 @@
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ScreenType, useScreen } from './ScreenProvider';
@@ -6,15 +6,16 @@ import { ScreenType, useScreen } from './ScreenProvider';
 const menuAtom = atom(false);
 
 export const useMenu = () => useAtom(menuAtom);
+export const useGetMenu = () => useAtomValue(menuAtom);
 
 export const MenuProvider: React.FC = () => {
   const [isSideMenuOpen, setIsSideMenuOpen] = useMenu();
   const screen = useScreen();
-
   const { pathname } = useLocation();
+
   useEffect(() => {
     setIsSideMenuOpen(false);
-  }, [setIsSideMenuOpen, pathname]);
+  }, [pathname, setIsSideMenuOpen]);
 
   useEffect(() => {
     if (isSideMenuOpen) {
@@ -24,10 +25,11 @@ export const MenuProvider: React.FC = () => {
     }
   }, [isSideMenuOpen]);
 
-  useEffect(() => {
-    if (screen === ScreenType.DESKTOP) {
-      setIsSideMenuOpen(false);
-    }
-  }, [screen, setIsSideMenuOpen]);
+  // useEffect(() => {
+  //   if (screen === ScreenType.DESKTOP) {
+  //     setIsSideMenuOpen(false);
+  //   }
+  // }, [screen, setIsSideMenuOpen]);
+
   return null;
 };

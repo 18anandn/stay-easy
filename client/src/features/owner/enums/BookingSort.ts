@@ -1,4 +1,4 @@
-export enum BookingSort {
-  CHECK_IN = 'check-in',
-  BOOKING = 'booking',
-}
+export const BookingSort = {
+  CHECK_IN: 'check-in',
+  BOOKING: 'booking',
+} as const;

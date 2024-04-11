@@ -7,15 +7,8 @@ import {
 } from 'typeorm';
 import { Home } from '../home/home.entity';
 import { Booking } from '../booking/booking.entity';
-
-export enum UserRole {
-  ADMIN = 'admin',
-  OWNER = 'owner',
-  EMPLOYEE = 'employee',
-  USER = 'user',
-}
-
-export type ValidRoles = `${UserRole}`;
+import { EnumValues } from '../types/EnumValues';
+import { UserRole, UserRoleEnum } from './UserRole.enum';
 
 @Entity('user')
 export class User {
@@ -35,13 +28,13 @@ export class User {
   @Check("email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'")
   email!: string;
 
-  @Column({ type: 'varchar', length: 72, nullable: false })
-  password!: string;
+  @Column({ type: 'varchar', length: 72, nullable: true })
+  password?: string;
 
   @Column({
     type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER,
+    enum: UserRoleEnum,
+    default: UserRoleEnum.USER,
   })
   role!: UserRole;
 

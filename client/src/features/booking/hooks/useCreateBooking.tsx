@@ -14,6 +14,7 @@ export const useCreateBooking = () => {
     onSuccess: (data, variables) => {
       queryClient.removeQueries({ queryKey: ['home-data', variables.homeId] });
       queryClient.removeQueries({ queryKey: ['trips'] });
+      queryClient.removeQueries({ queryKey: ['search-homes'] });
     },
   });
 

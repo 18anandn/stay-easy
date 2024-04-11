@@ -8,10 +8,11 @@ import {
 } from 'bcryptjs';
 import { Response } from 'express';
 import { addDays } from 'date-fns';
+import { JwtPayloadDto } from '../user/dtos/jwt.payload.dto';
 
 @Injectable()
 export class UtilsService {
-  readonly domain_name: string | undefined;
+  readonly domain_name: string;
   readonly token_cookie = 'token';
   readonly login_cookie = 'logged-in';
   constructor(
@@ -38,7 +39,10 @@ export class UtilsService {
     return this.domain_name;
   }
 
-  async attachTokenToCookies(res: Response, payload: Object): Promise<void> {
+  async attachTokenToCookies(
+    res: Response,
+    payload: JwtPayloadDto,
+  ): Promise<void> {
     const token = await this.createJwt(payload);
     const expires = addDays(new Date(), 30);
     res.cookie(this.token_cookie, token, {

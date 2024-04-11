@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 
 import LogoutButton from './LogoutButton';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { UserRole } from '../enums/UserRole.enum';
 
 const UserNavList: React.FC = () => {
   const { currentUser } = useCurrentUser();
@@ -10,7 +11,8 @@ const UserNavList: React.FC = () => {
     <nav>
       <ul id="drop-down-list">
         {currentUser &&
-          (currentUser.role === 'owner' || currentUser.role === 'admin') && (
+          (currentUser.role === UserRole.OWNER ||
+            currentUser.role === UserRole.ADMIN) && (
             <li>
               <a href="/owner" target="_blank">
                 Your Homes

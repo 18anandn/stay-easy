@@ -6,9 +6,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Home } from './home.entity';
 import { GeocodingModule } from '../geocoding/geocoding.module';
 import { UploadModule } from '../upload/upload.module';
+import { NestjsFormDataModule } from 'nestjs-form-data';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Home]), UtilsModule, GeocodingModule, UploadModule],
+  imports: [
+    TypeOrmModule.forFeature([Home]),
+    UtilsModule,
+    GeocodingModule,
+    UploadModule,
+    NestjsFormDataModule,
+  ],
   providers: [HomeService],
   controllers: [HomeController],
 })

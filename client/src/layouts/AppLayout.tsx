@@ -1,43 +1,35 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import styled from 'styled-components';
 import Footer from './Footer';
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
 import Loader from '../components/loaders/Loader';
 import { ScreenProvider } from '../providers/ScreenProvider';
-
-const ViewPortBox = styled.div`
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-`;
+import ResetScrollOnPathChange from '../components/ResetScrollOnPathChange';
 
 const StyledMain = styled.main`
-  /* width: 100%; */
-  flex-grow: 1;
+  min-height: 100svh;
   display: grid;
+  /* grid-template-columns: 100%; */
 
   .custom-loader {
     font-size: 0.1rem;
   }
+
+  .custom-spinner {
+    font-size: 0.05rem;
+  }
 `;
 
 const AppLayout: React.FC = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
   return (
     <>
+      <ResetScrollOnPathChange />
       <ScreenProvider />
-      <ViewPortBox>
-        <StyledMain>
-          <Suspense fallback={<Loader />}>
-            <Outlet />
-          </Suspense>
-        </StyledMain>
-      </ViewPortBox>
+      <StyledMain>
+        <Suspense fallback={<Loader />}>
+          <Outlet />
+        </Suspense>
+      </StyledMain>
       <Footer />
     </>
   );

@@ -1,24 +1,16 @@
-import { LatLng, LatLngBounds, Map, PointExpression } from 'leaflet';
+import { LatLngBounds, Map, PointExpression } from 'leaflet';
 
 const PADDING: PointExpression = [40, 50];
 const ZOOM_LEVEL: number = 10;
 
 export const goToPosition = (
-  position: LatLngBounds | LatLng,
+  position: LatLngBounds,
   map: Map,
-  animate: boolean,
+  animate: boolean
 ) => {
-  if (position instanceof LatLngBounds) {
-    if (animate) {
-      map.flyToBounds(position, { padding: PADDING });
-    } else {
-      map.fitBounds(position, { padding: PADDING });
-    }
+  if (animate) {
+    map.flyToBounds(position.pad(0.1));
   } else {
-    if (animate) {
-      map.flyTo(position, ZOOM_LEVEL);
-    } else {
-      map.setView(position, ZOOM_LEVEL);
-    }
+    map.fitBounds(position.pad(0.1));
   }
 };

@@ -5,29 +5,33 @@ import { MouseEventHandler, useEffect, useState } from 'react';
 import { addDays, format } from 'date-fns';
 import CloseButton from './buttons/CloseButton';
 import { DATE_FORMAT_TEXT } from '../data/constants';
-import { useScreen } from '../providers/ScreenProvider';
+import {
+  ScreenType,
+  screenWidths,
+  useScreen,
+} from '../providers/ScreenProvider';
+import classNames from 'classnames';
 
 const StyledCustomDatePicker = styled.div`
-  /* --height: 50px; */
-  width: 18rem;
-  box-sizing: border-box;
-
   .dates {
     /* height: var(--height); */
-    margin: auto;
-    padding: 0;
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    align-items: center;
+    display: flex;
+    flex-direction: column;
     position: relative;
-    border-radius: 1rem;
-    /* border: 1px solid red; */
+
+    .date-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      /* align-items: center; */
+      border-radius: 1rem;
+      cursor: pointer;
+    }
 
     .check-in,
     .check-out {
-      box-sizing: border-box;
       padding: 0.5rem 1rem;
+      padding-right: 1rem;
       border: 1px solid rgba(0, 0, 0, 0.2);
       display: flex;
       flex-direction: column;
@@ -46,19 +50,22 @@ const StyledCustomDatePicker = styled.div`
       }
 
       input {
-        cursor: pointer;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
         box-sizing: border-box;
         width: 100%;
         font-size: 1rem;
         border: none;
         outline: none;
+        cursor: inherit;
       }
 
       .close-button {
         font-size: 0.35rem;
         position: absolute;
         top: 50%;
-        right: 0.3rem;
+        right: 0.1rem;
         transform: translate(0, -50%);
       }
     }
@@ -77,7 +84,8 @@ const StyledCustomDatePicker = styled.div`
 
   .day-picker-container {
     height: min-content;
-    margin: 0;
+    width: min-content;
+    margin: auto;
     padding: 10px;
     position: absolute;
     /* top: var(--height); */
@@ -85,10 +93,26 @@ const StyledCustomDatePicker = styled.div`
     /* bottom: 0; */
     left: 50%;
     z-index: 1;
-    transform: translate(-50%, 0);
+    translate: -50%;
     background-color: white;
     border: 1px solid black;
     border-radius: 1rem;
+    display: none;
+
+    &.normal {
+      display: block;
+      position: static;
+      translate: unset;
+    }
+
+    &.left {
+      left: 100%;
+      translate: -100%;
+    }
+
+    &.open {
+      display: block;
+    }
 
     .day-picker {
       height: min-content;
@@ -284,11 +308,18 @@ const StyledCustomDatePicker = styled.div`
       background-color: var(--background-range);
     }
   }
+
+  @media (max-width: ${screenWidths.phone}px) {
+    .day-picker-container {
+      padding: 2px 15px;
+    }
+  }
 `;
 
 type SelectedFieldType = 'check-in' | 'check-out' | undefined;
 
 type Props = {
+  className?: string;
   initialDateRange?: DateRange;
   minStartDate?: Date;
   maxStartDate?: Date;
@@ -297,6 +328,7 @@ type Props = {
   disabledDates?: Date[];
   onSelectedFieldChange?: (field: SelectedFieldType) => void;
   onDateRangeChange: (dateRange: DateRange | undefined) => void;
+  pickerPosition?: 'center' | 'left' | 'right' | 'normal';
 };
 
 const CustomDatePicker: React.FC<Props> = ({
@@ -308,6 +340,8 @@ const CustomDatePicker: React.FC<Props> = ({
   disabledDates,
   onSelectedFieldChange,
   onDateRangeChange,
+  className = 'custom-date-picker',
+  pickerPosition = 'center',
 }) => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     () => initialDateRange
@@ -315,6 +349,7 @@ const CustomDatePicker: React.FC<Props> = ({
   const [isOpenDatePicker, setIsOpenDatePicker] = useState<boolean>(false);
   const [selectedField, setSelectedField] = useState<SelectedFieldType>();
   const screen = useScreen();
+  const normal = screen === ScreenType.PHONE;
 
   function closeDatePicker() {
     setIsOpenDatePicker(false);
@@ -336,12 +371,22 @@ const CustomDatePicker: React.FC<Props> = ({
   }, [initialDateRange]);
 
   const openDatePicker: MouseEventHandler = (event) => {
-    event.stopPropagation();
-    event.preventDefault();
-    if (!isOpenDatePicker) {
-      setIsOpenDatePicker(true);
+    if (!normal) {
+      event.stopPropagation();
+      event.preventDefault();
+      if (!isOpenDatePicker) {
+        setIsOpenDatePicker(true);
+      }
     }
   };
+
+  useEffect(() => {
+    if (normal) {
+      setSelectedField('check-in');
+    } else {
+      setSelectedField(undefined);
+    }
+  }, [normal]);
 
   maxEndDate =
     maxEndDate ??
@@ -349,97 +394,109 @@ const CustomDatePicker: React.FC<Props> = ({
       ? addDays(dateRange.from, maxRange)
       : undefined);
 
+  const checkInClasses = classNames({
+    'check-in': true,
+    selected: selectedField === 'check-in',
+  });
+
+  const checkOutClasses = classNames({
+    'check-out': true,
+    selected: selectedField === 'check-out',
+  });
+
+  const dayPickerContainerClasses = classNames({
+    'day-picker-container': true,
+    open: isOpenDatePicker,
+    [pickerPosition]: screen !== ScreenType.PHONE,
+    normal,
+  });
+
   return (
-    <StyledCustomDatePicker>
+    <StyledCustomDatePicker className={className}>
       <div className="dates" onClick={openDatePicker}>
-        <div
-          className={`check-in${
-            selectedField === 'check-in' ? ' selected' : ''
-          }`}
-          onClickCapture={() => {
-            if (selectedField !== 'check-in') {
-              setSelectedField('check-in');
-              onSelectedFieldChange?.('check-in');
-            }
-          }}
-        >
-          <label htmlFor="check-in">CHECK-IN</label>
-          <input
-            id="check-in"
-            readOnly
-            type="text"
-            placeholder="Select date"
-            value={
-              dateRange && dateRange.from
-                ? format(dateRange.from, DATE_FORMAT_TEXT)
-                : ''
-            }
-          />
-          {dateRange && dateRange.from && (
-            <CloseButton
-              type="button"
-              onClickCapture={(event) => {
-                event.stopPropagation();
-                setDateRange(undefined);
-                onDateRangeChange(undefined);
-              }}
-            />
-          )}
-        </div>
-        <div
-          className={`check-out${
-            selectedField === 'check-out' ? ' selected' : ''
-          }`}
-          onClickCapture={() => {
-            if (!dateRange || !dateRange.from) {
+        <div className="date-fields">
+          <div
+            className={checkInClasses}
+            onClickCapture={() => {
               if (selectedField !== 'check-in') {
                 setSelectedField('check-in');
                 onSelectedFieldChange?.('check-in');
               }
-            } else {
-              if (selectedField !== 'check-out') {
-                setSelectedField('check-out');
-                onSelectedFieldChange?.('check-out');
+            }}
+          >
+            <label htmlFor="check-in">CHECK-IN</label>
+            <input
+              id="check-in"
+              readOnly
+              type="text"
+              placeholder="Select date"
+              value={
+                dateRange && dateRange.from
+                  ? format(dateRange.from, DATE_FORMAT_TEXT)
+                  : ''
               }
-            }
-          }}
-        >
-          <label htmlFor="check-out">CHECK-OUT</label>
-          <input
-            id="check-out"
-            readOnly
-            type="text"
-            placeholder="Select Date"
-            value={
-              dateRange && dateRange.to
-                ? format(dateRange.to, DATE_FORMAT_TEXT)
-                : ''
-            }
-          />
-          {dateRange && dateRange.to && (
-            <CloseButton
-              type="button"
-              onClickCapture={(event) => {
-                event.stopPropagation();
-                const newDateRange = {
-                  from: dateRange.from,
-                  to: undefined,
-                };
-                setDateRange(newDateRange);
-                onDateRangeChange(newDateRange);
-              }}
             />
-          )}
+            {dateRange && dateRange.from && (
+              <CloseButton
+                type="button"
+                onClickCapture={(event) => {
+                  event.stopPropagation();
+                  setDateRange(undefined);
+                  onDateRangeChange(undefined);
+                }}
+              />
+            )}
+          </div>
+          <div
+            className={checkOutClasses}
+            onClickCapture={() => {
+              if (!dateRange || !dateRange.from) {
+                if (selectedField !== 'check-in') {
+                  setSelectedField('check-in');
+                  onSelectedFieldChange?.('check-in');
+                }
+              } else {
+                if (selectedField !== 'check-out') {
+                  setSelectedField('check-out');
+                  onSelectedFieldChange?.('check-out');
+                }
+              }
+            }}
+          >
+            <label htmlFor="check-out">CHECK-OUT</label>
+            <input
+              id="check-out"
+              readOnly
+              type="text"
+              placeholder="Select Date"
+              value={
+                dateRange && dateRange.to
+                  ? format(dateRange.to, DATE_FORMAT_TEXT)
+                  : ''
+              }
+            />
+            {dateRange && dateRange.to && (
+              <CloseButton
+                type="button"
+                onClickCapture={(event) => {
+                  event.stopPropagation();
+                  const newDateRange = {
+                    from: dateRange.from,
+                    to: undefined,
+                  };
+                  setDateRange(newDateRange);
+                  onDateRangeChange(newDateRange);
+                }}
+              />
+            )}
+          </div>
         </div>
-        <div
-          className="day-picker-container"
-          style={{ display: isOpenDatePicker ? 'initial' : 'none' }}
-        >
+        <div className={dayPickerContainerClasses}>
           <DayPicker
             className="day-picker"
             mode="range"
             selected={dateRange}
-            numberOfMonths={screen === 'desktop' ? 2 : 1}
+            numberOfMonths={screen === ScreenType.PHONE ? 1 : 2}
             fromDate={
               selectedField === 'check-in' ? minStartDate : dateRange?.from
             }
@@ -483,7 +540,11 @@ const CustomDatePicker: React.FC<Props> = ({
                   to: selectedDay,
                 };
                 setIsOpenDatePicker(false);
-                setSelectedField(undefined);
+                if (normal) {
+                  setSelectedField('check-in');
+                } else {
+                  setSelectedField(undefined);
+                }
                 onSelectedFieldChange?.(undefined);
                 onDateRangeChange(newDateRange);
                 setDateRange(newDateRange);

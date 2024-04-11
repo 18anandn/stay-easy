@@ -1,9 +1,9 @@
 import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
-import { Verification } from '../../home/verification.enum';
+import { Verification, VerificationEnum } from '../../home/Verification.enum';
 
 export class GetHomeListDto {
   @IsOptional()
-  @IsEnum(Verification)
+  @IsEnum(VerificationEnum)
   verification_status?: Verification;
 
   @IsOptional()

@@ -19,9 +19,10 @@ export const getHomeData = tryCatchWrapper(
     if (!res.ok) {
       throw new Exception(
         data.message ?? 'There was an error',
-        data.statusCode ?? 500,
+        data.statusCode ?? 500
       );
     }
+
     return data;
-  },
+  }
 );

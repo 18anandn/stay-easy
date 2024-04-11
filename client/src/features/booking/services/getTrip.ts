@@ -1,44 +1,33 @@
-import { Exception } from '../../../data/Exception';
-import { tryCatchWrapper } from '../../../utils/tryCatchWrapper';
+import { z } from 'zod';
+import { customFetch } from '../../../utils/customFetch';
+import { zodCustomDate } from '../../../utils/zodHelpers/zodCustomDate';
+import { zodLatLng } from '../../../utils/zodHelpers/zodLatLng';
 
-type Trip = {
-  id: string;
-  from_date: string;
-  to_date: string;
-  paid: number;
-  guests: number;
-  home: {
-    id: string;
-    name: string;
-    time_zone: string;
-    city: string;
-    state: string;
-    country: string;
-    address: string;
-    main_image: string;
-    location: {
-      lat: number;
-      lng: number;
-    };
-  };
+const TripSchema = z.object({
+  id: z.string(),
+  from_date: zodCustomDate(),
+  to_date: zodCustomDate(),
+  paid: z.number({ coerce: true }),
+  guests: z.number({ coerce: true }).int(),
+  home: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    time_zone: z.string(),
+    city: z.string(),
+    state: z.string(),
+    country: z.string(),
+    address: z.string(),
+    main_image: z.string().url(),
+    location: zodLatLng(),
+  }),
+});
+
+type Trip = z.infer<typeof TripSchema>;
+
+export const getTrip = async (tripId: string): Promise<Trip> => {
+  const data = await customFetch(`/api/v1/booking/${tripId}`, TripSchema, {
+    errorMessage: 'There was an error while fetching the trips',
+  });
+
+  return data;
 };
-
-export const getTrip = tryCatchWrapper(
-  async (tripId: string): Promise<Trip> => {
-    const res = await fetch(`/api/v1/booking/${tripId}`, {
-      method: 'GET',
-      cache: 'no-cache',
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Exception(
-        data.message ?? 'There was an error while booking',
-        res.status,
-      );
-    }
-
-    return data;
-  },
-);

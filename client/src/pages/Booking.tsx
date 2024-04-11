@@ -8,28 +8,25 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import Loader from '../components/loaders/Loader';
-import {
-  addDays,
-  compareAsc,
-  differenceInDays,
-  isMatch,
-  startOfDay,
-} from 'date-fns';
+import { differenceInDays } from 'date-fns';
 import Button from '../components/buttons/Button';
 import { moneyFormatter } from '../utils/money-formatter';
 import { useCreateBooking } from '../features/booking/hooks/useCreateBooking';
-import { MouseEventHandler, useEffect, useLayoutEffect, useMemo } from 'react';
+import { MouseEventHandler, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import LoaderOverlay from '../components/loaders/LoaderOverlay';
 import { dateRangeFormatter } from '../utils/dates/date-range-formatter';
-import { getMaxCheckOutDate } from '../utils/dates/max-checkout-date';
 import { getFormattedLocation } from '../utils/location/format-location';
 import ErrorPage from './ErrorPage';
 import { useCurrentUser } from '../features/auth/hooks/useCurrentUser';
-import { CHECK_IN, CHECK_OUT, DATE_FORMAT_NUM, MAX_DATE_RANGE } from '../data/constants';
+import { CHECK_IN, CHECK_OUT } from '../data/constants';
+import { isValidInitialParams } from '../utils/isValidInitialParams';
+import { safeToUTCDate } from '../utils/dates/toUTCDate';
+import Spinner from '../components/loaders/Spinner';
+import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledBooking = styled.div`
-  padding: 3rem 8%;
+  padding: var(--padding-block, 20px) var(--padding-inline-large, 10%);
 
   .custom-loader {
     font-size: 0.1rem;
@@ -38,12 +35,17 @@ const StyledBooking = styled.div`
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(4, auto);
     gap: 1rem;
+    columns: 2;
+  }
+
+  .grid > * {
+    grid-column: 1 / 1;
   }
 
   h1 {
     font-size: 2.5rem;
-    margin-bottom: 1.4rem;
   }
 
   h2 {
@@ -52,8 +54,7 @@ const StyledBooking = styled.div`
   }
 
   .trip-details {
-    padding-bottom: 1.5rem;
-    margin-bottom: 1.4rem;
+    padding-bottom: 1rem;
     border-bottom: 1px solid rgb(211, 211, 211);
 
     ul {
@@ -78,7 +79,6 @@ const StyledBooking = styled.div`
   .terms {
     ul {
       margin-bottom: 1rem;
-      list-style-position: inside;
       display: flex;
       flex-direction: column;
       gap: 0.8rem;
@@ -90,25 +90,29 @@ const StyledBooking = styled.div`
   }
 
   .confirm-booking {
-    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
     p {
       font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-
-    button {
-      margin-bottom: 1.5rem;
     }
   }
 
   .right-column {
+    grid-column: 2 / 2;
+    grid-row: 1 / -1;
+
     .box {
       position: sticky;
       position: -webkit-sticky;
-      top: 6rem;
+      top: calc(var(--padding-block, 20px) + var(--top-navbar-height, 6rem));
       padding: 1.4rem;
       border: 1px solid rgb(211, 211, 211);
       border-radius: 1rem;
+      column-span: 2;
+      /* grid-column: 2;
+    grid-row: 1 / -1; */
     }
 
     .home-details {
@@ -158,6 +162,28 @@ const StyledBooking = styled.div`
       }
     }
   }
+
+  @media (max-width: ${screenWidths.phone}px) {
+    padding-inline: 8%;
+
+    .grid {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 2rem;
+      order: -2;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    .right-column {
+      order: -1;
+    }
+  }
 `;
 
 const Booking: React.FC = () => {
@@ -166,91 +192,46 @@ const Booking: React.FC = () => {
   const location = useLocation();
   const { homeId } = useParams();
   const { isLoading, data, error } = useGetHome(
-    isLoadingUser ? undefined : homeId,
+    isLoadingUser ? undefined : homeId
   );
   const { bookingFn, isBooking } = useCreateBooking();
   const [searchParams] = useSearchParams();
-  let guests = parseInt(searchParams.get('guests') ?? '1');
-  if (data) {
-    if (isNaN(guests) || guests < 1) {
-      guests = 1;
-    } else if (guests > data.cabin_capacity) {
-      guests = data.cabin_capacity;
-    }
-  }
 
-  const start_date_param = searchParams.get(CHECK_IN);
-  const end_date_param = searchParams.get(CHECK_OUT);
-  let start_date =
-    start_date_param && isMatch(start_date_param, DATE_FORMAT_NUM)
-      ? startOfDay(new Date(start_date_param))
-      : undefined;
-  if (
-    data &&
-    start_date &&
-    (compareAsc(start_date, data.minDate) < 0 ||
-      compareAsc(start_date, data.maxDate) > 0)
-  ) {
-    start_date = undefined;
-  }
-
-  const maxCheckOutDate = useMemo(() => {
-    if (!data || !start_date) return undefined;
-    return getMaxCheckOutDate(start_date, MAX_DATE_RANGE, data.bookings);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [start_date_param, data]);
-
-  let end_date =
-    start_date && end_date_param && isMatch(end_date_param, DATE_FORMAT_NUM)
-      ? startOfDay(new Date(end_date_param))
-      : undefined;
-  if (
-    end_date &&
-    start_date &&
-    (compareAsc(end_date, start_date) <= 0 ||
-      compareAsc(end_date, addDays(start_date, MAX_DATE_RANGE)) > 0)
-  ) {
-    end_date = undefined;
-  }
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty(
+      '--padding-inline',
+      'var(--padding-inline-large)'
+    );
+    return () => {
+      document.documentElement.style.removeProperty('--padding-inline');
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (!isLoadingUser && !currentUser) {
       const redirectURLParam = new URLSearchParams();
       redirectURLParam.set('redirectTo', location.pathname + location.search);
-      navigate(`/login?${redirectURLParam.toString()}`);
+      navigate(`/login?${redirectURLParam.toString()}`, { replace: true });
     }
   }, [currentUser, isLoadingUser, navigate, location]);
 
-  useEffect(() => {
-    function checker() {
-      if (
-        (start_date_param && !start_date) ||
-        (end_date_param && !end_date) ||
-        (data &&
-          data.invalidCheckInDates.some((date) => {
-            return (
-              start_date && date.toISOString() === start_date.toISOString()
-            );
-          })) ||
-        (end_date &&
-          maxCheckOutDate &&
-          compareAsc(end_date, maxCheckOutDate) > 0)
-      ) {
-        if (homeId) navigate(`home/${homeId}`, { replace: true });
+  useLayoutEffect(() => {
+    if (data) {
+      const searchParamsOnInitialLoad = new URLSearchParams(
+        document.location.search
+      );
+      if (!isValidInitialParams(searchParamsOnInitialLoad, data)) {
+        navigate(`/home/${data.id}`, { replace: true });
       }
     }
+  }, [data, navigate]);
 
-    checker();
-  }, [
-    data,
-    end_date,
-    end_date_param,
-    homeId,
-    maxCheckOutDate,
-    navigate,
-    start_date,
-    start_date_param,
-  ]);
+  const start_date_param = searchParams.get(CHECK_IN);
+  const end_date_param = searchParams.get(CHECK_OUT);
+
+  const start_date = safeToUTCDate(start_date_param);
+  const end_date = safeToUTCDate(end_date_param);
+  const guests = parseInt(searchParams.get('guests') ?? '1');
 
   const price_per_night = data
     ? (data.price * 100 +
@@ -288,7 +269,7 @@ const Booking: React.FC = () => {
         onError: (error) => {
           toast.error(error.message);
         },
-      },
+      }
     );
   };
 
@@ -296,101 +277,97 @@ const Booking: React.FC = () => {
     <StyledBooking>
       {(isLoadingUser || isLoading) && <Loader color="black" />}
       {isBooking && <LoaderOverlay />}
-      <div style={{ height: isLoading ? '0' : 'auto' }} className="grid">
-        {!isLoading && !isLoadingUser && data && (
-          <>
-            <div className="left-column">
-              <h1>Request to book</h1>
-              <div className="trip-details">
-                <h2>Your trip</h2>
-                <ul>
-                  <li>
-                    <span className="heading">Dates (IST)</span>
-                    <span>{dateRangeFormatter(start_date, end_date)}</span>
-                  </li>
-                  <li>
-                    <span className="heading">Guests</span>
-                    <span>
-                      {guests} guest{guests > 1 ? 's' : ''}
-                    </span>
-                  </li>
-                </ul>
-                <Button
-                  onClick={() => {
-                    navigate(`/home/${homeId}?${searchParams.toString()}`);
-                  }}
-                >
-                  Change details
-                </Button>
-              </div>
-              <div className="terms">
-                <h2>Terms</h2>
-                <ul>
-                  <li>Once the home is booked, it cannot be cancelled.</li>
-                  <li>
-                    Since this is a sample website, there is no payment
-                    involved.
-                  </li>
-                  <li>The home owner will contact you for details.</li>
-                  <li>
-                    You must follow the ground rules put forth by the home
-                    owner.
-                  </li>
-                </ul>
-              </div>
-              <div className="confirm-booking">
-                <p>
-                  By clicking the following button, you agree to our{' '}
-                  <Link to="/privacy">privacy</Link> and{' '}
-                  <Link to="/terms">terms</Link>.
-                </p>
-                <Button onClick={onBookingRequest}>Confirm Booking</Button>
-                <p>Clicking the above button will immediately book the home.</p>
-              </div>
-            </div>
-
-            <div className="right-column">
-              <div className="box">
-                <div className="home-details">
-                  <img src={data.images[0]} alt="" />
-                  <div className="data">
-                    <p>{data.name}</p>
-                    <p>
-                      {getFormattedLocation(
-                        data.city,
-                        data.state,
-                        data.country,
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="pricing">
-                  <h2>Price details</h2>
-                  <table>
-                    <tbody>
-                      <tr>
-                        <td>
-                          {moneyFormatter(price_per_night)} &times; {nights}{' '}
-                          nights
-                        </td>
-                        <td>{moneyFormatter(total_price)}</td>
-                      </tr>
-                      <tr>
-                        <td>Taxes (10%)</td>
-                        <td>{moneyFormatter(total_price / 10)}</td>
-                      </tr>
-                      <tr className="total">
-                        <td>Total (INR)</td>
-                        <td>{moneyFormatter((total_price * 11) / 10)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+      {isLoadingUser || isLoading ? (
+        <Spinner />
+      ) : data ? (
+        <div className="grid">
+          <h1>Request to book</h1>
+          <div className="trip-details">
+            <h2>Your trip</h2>
+            <ul>
+              <li>
+                <span className="heading">
+                  Dates ({data.timezone_details.other})
+                </span>
+                <span>{dateRangeFormatter(start_date, end_date)}</span>
+              </li>
+              <li>
+                <span className="heading">Guests</span>
+                <span>
+                  {guests} guest{guests > 1 ? 's' : ''}
+                </span>
+              </li>
+            </ul>
+            <Button
+              onClick={() => {
+                navigate(`/home/${homeId}?${searchParams.toString()}`);
+              }}
+            >
+              Change details
+            </Button>
+          </div>
+          <div className="right-column">
+            <div className="box">
+              <div className="home-details">
+                <img src={data.images[0]} alt="" />
+                <div className="data">
+                  <p>{data.name}</p>
+                  <p>
+                    {getFormattedLocation(data.city, data.state, data.country)}
+                  </p>
                 </div>
               </div>
+              <div className="pricing">
+                <h2>Price details</h2>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>
+                        {moneyFormatter(price_per_night)} &times; {nights}{' '}
+                        nights
+                      </td>
+                      <td>{moneyFormatter(total_price)}</td>
+                    </tr>
+                    <tr>
+                      <td>Taxes (10%)</td>
+                      <td>{moneyFormatter(total_price / 10)}</td>
+                    </tr>
+                    <tr className="total">
+                      <td>Total (INR)</td>
+                      <td>{moneyFormatter((total_price * 11) / 10)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+          <div className="terms">
+            <h2>Terms</h2>
+            <ul>
+              <li>Once the home is booked, it cannot be cancelled.</li>
+              <li>
+                Since this is a sample website, there is no payment involved.
+              </li>
+              <li>The home owner will contact you for details.</li>
+              <li>
+                You must follow the ground rules put forth by the home owner.
+              </li>
+            </ul>
+          </div>
+          <div className="confirm-booking">
+            <p>
+              By clicking the following button, you agree to our{' '}
+              <Link to="/privacy">privacy</Link> and{' '}
+              <Link to="/terms">terms</Link>.
+            </p>
+            <Button onClick={onBookingRequest}>Confirm Booking</Button>
+            <p>Clicking the above button will immediately book the home.</p>
+          </div>
+        </div>
+      ) : (
+        <ErrorPage error={error} />
+      )}
+      <div className="grid"></div>
     </StyledBooking>
   );
 };

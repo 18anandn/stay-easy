@@ -1,9 +1,9 @@
 import { IsEmail, IsString } from 'class-validator';
-import { UserRole } from '../user.entity';
+import { UserRole } from '../UserRole.enum';
 
-export class CurrentUserDto {
+export class CurrentUserDto implements Express.UserDataInRequest {
   @IsString()
-  userId!: string;
+  id!: string;
 
   @IsEmail()
   email!: string;

@@ -1,26 +1,26 @@
-import { Exception } from '../../../data/Exception';
-import { tryCatchWrapper } from '../../../utils/tryCatchWrapper';
-import { HomeCardInfo } from '../types/HomeCardInfo';
+import { z } from 'zod';
+import { HomeCardInfoSchema } from '../types/HomeCardInfo';
+import { customFetch } from '../../../utils/customFetch';
+
+const HomePageSchema = z.object({
+  homes: HomeCardInfoSchema.array(),
+  count: z.number({ coerce: true }).int(),
+  items_per_page: z.number({ coerce: true }).int(),
+});
 
 type HomePage = {
-  homes: HomeCardInfo[];
   totalPages: number;
+} & Omit<z.infer<typeof HomePageSchema>, 'count' | 'items_per_page'>;
+
+export const getHomeList = async (page: number): Promise<HomePage> => {
+  const data = await customFetch(`api/v1/home?page=${page}`, HomePageSchema, {
+    errorMessage: 'There was an erro fetching the homes',
+  });
+
+  const { count, items_per_page, ...rest } = data;
+
+  return {
+    ...rest,
+    totalPages: Math.ceil(count / items_per_page),
+  };
 };
-
-export const getHomeList = tryCatchWrapper(
-  async (page: number): Promise<HomePage> => {
-    const res = await fetch(`api/v1/home?page=${page}`, {
-      method: 'GET',
-      cache: 'no-cache',
-      mode: 'cors',
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Exception(data.message, res.status);
-    }
-
-    return data;
-  },
-);

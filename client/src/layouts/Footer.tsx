@@ -23,6 +23,7 @@ const StyledFooter = styled.footer`
 
   @media (max-width: ${screenWidths.phone}px) {
     padding: 2rem 5%;
+    padding-left: calc(var(--footer-padding-left, 2.5rem));
     flex-direction: column;
     gap: 1rem;
   }
