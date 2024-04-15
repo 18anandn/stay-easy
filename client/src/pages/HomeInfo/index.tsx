@@ -14,14 +14,14 @@ const StyledHomeInfo = styled.div`
   padding-inline: var(--padding-inline);
   display: grid;
   grid-template-columns: 1fr min-content;
-  gap: 2rem 8%;
+  gap: 1rem 8%;
 
   .custom-loader {
     font-size: 0.1rem;
   }
 
   h1 {
-    font-size: 2.4rem;
+    font-size: 2rem;
     grid-column: 1 / -1;
     word-wrap: break-word;
     /* hyphens: auto; */

@@ -16,7 +16,6 @@ import {
   S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import { CurrentUserDto } from '../user/dtos/current-user.dto';
-import { isInt } from 'class-validator';
 import { S3File } from './s3file.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -58,19 +57,6 @@ export class UploadService {
         secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY') ?? '',
       },
     };
-    // if (this.configService.get('NODE_ENV') === 'development') {
-    //   params = {
-    //     ...params,
-    //     endpoint: 'http://localhost:9000',
-    //     forcePathStyle: true,
-    //     credentials: {
-    //       accessKeyId: this.configService.get('DEV_MINIO_ACCESS_KEY_ID'),
-    //       secretAccessKey: this.configService.get(
-    //         'DEV_MINIO_SECRET_ACCESS_KEY',
-    //       ),
-    //     },
-    //   };
-    // }
     this.client = new S3Client(params);
     this.cloudfront_domain = this.configService.get('CLOUDFRONT_DOMAIN') ?? '';
     this.cloudfront_keypair_id =
@@ -80,9 +66,6 @@ export class UploadService {
   }
 
   async getPresignedpost(number_of_keys: number, user: CurrentUserDto) {
-    if (!isInt(number_of_keys)) {
-      throw new BadRequestException('Send valid number of required urls');
-    }
     if (number_of_keys > KEYS_LIMIT) {
       throw new BadRequestException(`Cannot send more than ${KEYS_LIMIT} urls`);
     }

@@ -1,4 +1,4 @@
-import { Route } from 'react-router-dom';
+import { Navigate, Route } from 'react-router-dom';
 import OwnerAppLayout from '../layouts/owner/OwnerAppLayout';
 import OwnerHomeLayout from '../layouts/owner/OwnerHomeLayout';
 import OwnerAnalytics from '../pages/owner/OwnerAnalytics';
@@ -13,7 +13,10 @@ const Owner = (
   <Route path="/" element={<OwnerAppLayout />}>
     <Route element={<OwnerBaseLayout />}>
       <Route index element={<OwnerHome />} />
-      <Route path="details/:homeId" element={<OwnerHomeDetails />} />
+      <Route path="details">
+        <Route index element={<Navigate to="/" replace />} />
+        <Route path=":homeId" element={<OwnerHomeDetails />} />
+      </Route>
     </Route>
     <Route
       path=":ownerHomeId"

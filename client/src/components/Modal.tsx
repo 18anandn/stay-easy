@@ -7,12 +7,14 @@ import { createPortal } from 'react-dom';
 const modalTransitionDuration = 200;
 
 const StyledDialog = styled.dialog`
+  /* padding: 0; */
+  max-height: 100svh;
+  max-width: 100svw;
   margin: auto;
   border: none;
   outline: none;
   animation: myFadeOut ${modalTransitionDuration}ms ease-out;
   z-index: 10;
-  background-color: transparent;
   overflow: visible;
 
   &::backdrop {
@@ -46,8 +48,8 @@ const StyledDialog = styled.dialog`
   }
 
   .content-box {
-    max-width: 100svw;
-    max-height: 90svh;
+    max-width: var(--max-modal-width, 90svw);
+    max-height: var(--max-modal-height, 90svh);
     overflow: auto;
     box-shadow: 0 0 0 200vw rgba(0, 0, 0, 0.5);
     border-radius: 20px;
@@ -57,7 +59,7 @@ const StyledDialog = styled.dialog`
       font-size: 11px;
       position: absolute;
       top: 0;
-      right: 0;
+      right: 20px;
       z-index: 1;
       transform: translate(-25%, 25%);
       background-color: white;

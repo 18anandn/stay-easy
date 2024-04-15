@@ -135,6 +135,7 @@ export class AdminService {
     }: UpdateHomeDto,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       const homeRepo = queryRunner.manager.getRepository(Home);

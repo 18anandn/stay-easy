@@ -1,13 +1,6 @@
 import { UploadService } from '../upload/upload.service';
 import { HomeService } from './home.service';
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CreateHomeDto } from './dtos/create-home.dto';
 import { CurrentUser } from '../user/decorators/current-user.decorator';
 import { AuthGuard } from '../guards/auth.guard';
@@ -15,6 +8,8 @@ import { CurrentUserDto } from '../user/dtos/current-user.dto';
 import { FindHomeDto } from './dtos/find-home.dto';
 import { PageParam } from '../dtos/page-params.dto';
 import { FindHomeWithAddressDto } from './dtos/find-home-with-address.dto';
+import { VerifyCreateHomeDataDto } from './dtos/verify-create-home-data';
+import { NumberOfImagesDto } from './dtos/number-of-images.dto';
 
 @Controller('api/v1/home')
 export class HomeController {
@@ -27,6 +22,17 @@ export class HomeController {
   @AuthGuard()
   createHome(@Body() home: CreateHomeDto, @CurrentUser() user: CurrentUserDto) {
     return this.homeService.createHome(home, user);
+  }
+
+  @Post('create/verify/:urls')
+  @AuthGuard()
+  async verifyCreateHomeData(
+    @Param() { urls }: NumberOfImagesDto,
+    @Body() data: VerifyCreateHomeDataDto,
+    @CurrentUser() user: CurrentUserDto,
+  ) {
+    await this.homeService.verifyCreateHomeData(user);
+    return this.uploadService.getPresignedpost(urls, user);
   }
 
   @Get()
@@ -48,11 +54,5 @@ export class HomeController {
   @Get('/:homeId')
   getHome(@Param('homeId') homeId: string) {
     return this.homeService.getHome(homeId);
-  }
-
-  @Get('/upload/:urls')
-  @AuthGuard()
-  uploadFile(@Param('urls') urls: number, @CurrentUser() user: CurrentUserDto) {
-    return this.uploadService.getPresignedpost(urls, user);
   }
 }

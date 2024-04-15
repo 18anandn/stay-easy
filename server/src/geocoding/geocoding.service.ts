@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GeocodingApiKey } from './geocoding-api-key.entity';
 import { Repository, DataSource, QueryFailedError } from 'typeorm';
 import { DatabaseError } from 'pg-protocol';
+import { Cron } from '@nestjs/schedule';
 
 export type LocationDetails = {
   lat: number;
@@ -55,17 +56,21 @@ export class GeocodingService {
     return savedKeyList;
   }
 
+  @Cron('00 00 * * *')
+  resetCurrentKey() {
+    this.curr_key = 1;
+  }
+
   async getLocation(address: string): Promise<LocationDetails | null> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
       for (let i = this.curr_key; i <= this.apiKeyList.length; i++) {
+        await queryRunner.startTransaction();
         try {
-          await queryRunner.startTransaction();
-
           const repo = queryRunner.manager.getRepository(GeocodingApiKey);
 
-          const temp = await repo.findOneBy({ key_num: i });
+          // const temp = await repo.findOneBy({ key_num: i });
 
           const updatedKey = await repo
             .createQueryBuilder('geocoding_api_key')
@@ -81,7 +86,7 @@ export class GeocodingService {
           searchParam.set('text', address);
           searchParam.set('type', 'locality');
           searchParam.set('format', 'json');
-          searchParam.set('apiKey', this.apiKeyList[i-1]);
+          searchParam.set('apiKey', this.apiKeyList[i - 1]);
           const res = await fetch(
             `https://api.geoapify.com/v1/geocode/search?${searchParam.toString()}`,
           );
@@ -110,6 +115,8 @@ export class GeocodingService {
             error.driverError instanceof DatabaseError &&
             error.driverError.constraint === 'max_calls'
           ) {
+            console.log('skipped');
+            this.curr_key++;
             continue;
           }
           throw error;

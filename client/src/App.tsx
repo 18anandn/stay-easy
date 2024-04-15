@@ -10,15 +10,15 @@ import { Toaster } from 'react-hot-toast';
 import { lazy } from 'react';
 
 import GlobalStyles from './GlobalStyles';
-import ErrorPage from './pages/ErrorPage';
 import AppLayout from './layouts/AppLayout';
-import { Exception } from './data/Exception';
 import { Subdomain, getSubdomain } from './utils/getSubdomain';
 import Main from './routes/Main';
 import Admin from './routes/Admin';
 import Owner from './routes/Owner';
 import { AuthWithBaseUrl } from './routes/AuthWithBaseUrl';
-
+import NotFoundPage from './pages/NotFoundPage';
+import { Exception } from './data/Exception';
+import ErrorPageWithPadding from './pages/ErrorPageWithPadding';
 
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
@@ -41,6 +41,7 @@ function App() {
   let displayRoute = Main;
   // let displayRoute = Owner;
   // let displayRoute = Admin;
+  // let displayRoute = AuthWithBaseUrl;
   switch (subdomain) {
     case Subdomain.ADMIN:
       displayRoute = Admin;
@@ -58,23 +59,20 @@ function App() {
     createRoutesFromElements(
       <>
         <Route element={<AppLayout />}>
-          {displayRoute}
-
           <Route
-            path="*"
-            element={
-              <ErrorPage
+            errorElement={
+              <ErrorPageWithPadding
                 error={
-                  new Exception(
-                    'The page you are looking for does not exist',
-                    404
-                  )
+                  new Exception('There was an unknown application error.', -1)
                 }
               />
             }
-          />
-          <Route path="privacy" element={<Privacy />} />
-          <Route path="terms" element={<Terms />} />
+          >
+            {displayRoute}
+            <Route path="*" element={<NotFoundPage />} />
+            <Route path="privacy" element={<Privacy />} />
+            <Route path="terms" element={<Terms />} />
+          </Route>
         </Route>
       </>
     )

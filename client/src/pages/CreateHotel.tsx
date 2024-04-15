@@ -28,8 +28,14 @@ import { AMENITIES_OPTIONS } from '../features/homes/data/amenities';
 import { screenWidths } from '../providers/ScreenProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getIndicesOfChar } from '../utils/getIndicesOfChar';
-import { createHome, uploadImages } from '../features/homes/services/createHome';
+import {
+  createHome,
+  uploadImages,
+  verifyCreateHomeData,
+} from '../features/homes/services/createHome';
 import { Exception } from '../data/Exception';
+import { useQueryClient } from '@tanstack/react-query';
+import { UserRole } from '../features/auth/enums/UserRole.enum';
 
 const StyledCreateHotel = styled.div`
   padding: 50px 5%;
@@ -214,8 +220,8 @@ const StyledAmenities = styled.div`
           display: flex;
           align-items: center;
           gap: 1rem;
+
           label {
-            white-space: nowrap;
             font-size: 1rem;
           }
 
@@ -237,7 +243,7 @@ const StyledAmenities = styled.div`
 `;
 
 const StatusBox = styled.div`
-  padding: 1rem 2rem;
+  padding: 30px;
   border-radius: 1rem;
   background-color: white;
   font-size: 2rem;
@@ -252,7 +258,6 @@ const StatusBox = styled.div`
 
   p {
     font-size: 1.1rem;
-    white-space: pre;
   }
 
   .custom-spinner {
@@ -272,6 +277,7 @@ const handleHeightChange: ChangeEventHandler<HTMLInputElement> = (event) => {
 };
 
 const CreateHotel: React.FC = () => {
+  const queryClient = useQueryClient();
   const methods = useForm<CreateHomeFormData>({
     defaultValues: { amenities: [] },
     resolver: zodResolver(CreateHomeFormDataSchema),
@@ -292,16 +298,24 @@ const CreateHotel: React.FC = () => {
   const onSubmit: SubmitHandler<CreateHomeFormData> = async (data) => {
     setSubmitting(true);
     try {
-      setMessage('Uploading Images....');
       // const images = await compressImages([
       //   ...data.main_image,
       //   ...data.extra_images,
       // ]);
+      setMessage('Verifying data....');
+      const uploadUrlData = await verifyCreateHomeData(data);
+      setMessage('Uploading images....');
       const images = [...data.main_image, ...data.extra_images];
-      const names = await uploadImages(images);
+      const names = await uploadImages(images, uploadUrlData);
       setMessage('Uploading your home info....');
       await createHome(data, names);
-      toast.success('Your home was registered successfully');
+      toast.success('Your home details was sent to the verification team', {
+        duration: 5500,
+      });
+      queryClient.setQueryData(['current-user'], (prev) => {
+        if (!prev) return prev;
+        return { ...prev, role: UserRole.OWNER };
+      });
       navigate('/', { replace: true });
     } catch (error) {
       let errorMessage = 'There was some internal server error';
@@ -717,12 +731,14 @@ const CreateHotel: React.FC = () => {
                 })}
               />
             </GridCell>
+            <GridCell $noteCell={true}>
+              <p>
+                Note: It may take upto 2 business days to verify your home.
+              </p>
+            </GridCell>
           </GridLayout>
           <Button className="submit-button">Submit</Button>
-          <Modal
-            isModalOpen={submitting}
-            closable={false}
-          >
+          <Modal isModalOpen={submitting} closable={false}>
             <StatusBox>
               <h3>Submitting.....</h3>
               <p>{message}</p>

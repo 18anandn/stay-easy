@@ -31,7 +31,7 @@ export class Booking {
   @Column({ type: 'smallint', nullable: false })
   guests!: Date;
 
-  @ManyToOne(() => Home, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Home)
   @JoinColumn({
     name: 'home_id',
     referencedColumnName: 'id',
@@ -45,7 +45,7 @@ export class Booking {
   @Column({ type: 'decimal', nullable: false })
   paid!: number;
 
-  @ManyToOne((type) => Cabin, { onDelete: 'CASCADE' })
+  @ManyToOne((type) => Cabin)
   @JoinColumn({
     name: 'cabin_id',
     referencedColumnName: 'id',

@@ -1,5 +1,5 @@
+import { CreateHomeFormData } from './../../../types/CreateHomeFormData';
 import { Exception } from '../../../data/Exception';
-import { CreateHomeFormData } from '../../../types/CreateHomeFormData';
 
 export const createHome = async (
   hotelData: CreateHomeFormData,
@@ -7,8 +7,8 @@ export const createHome = async (
 ) => {
   const { main_image, extra_images, ...requestBody } = hotelData;
   const res2 = await fetch('/api/v1/home/create', {
-    method: 'POST',
     mode: 'cors',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -20,6 +20,32 @@ export const createHome = async (
   if (!res2.ok) {
     throw new Exception(data2.message, res2.status);
   }
+};
+
+export const verifyCreateHomeData = async ({
+  main_image,
+  extra_images,
+  ...requestBody
+}: CreateHomeFormData): Promise<PresignedPostUrls> => {
+  const urls = extra_images.length + 1;
+  const res = await fetch(`/api/v1/home/create/verify/${urls}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-cache',
+    body: JSON.stringify({ ...requestBody }),
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Exception(
+      data?.message ?? 'There was an error verifying your home data',
+      res.status
+    );
+  }
+
+  return data;
 };
 
 const uploadFile = async (
@@ -54,22 +80,15 @@ type PresignedPostUrls = {
   fields: any;
 };
 
-export const uploadImages = async (images: File[]): Promise<string[]> => {
-  const res = await fetch(`/api/v1/home/upload/${images.length}`, {
-    mode: 'cors',
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Exception(data.message, res.status);
-  }
-
-  const { url, prefix, fields }: PresignedPostUrls = data;
+export const uploadImages = async (
+  images: File[],
+  uploadUrlData: PresignedPostUrls
+): Promise<string[]> => {
+  const { url, prefix, fields }: PresignedPostUrls = uploadUrlData;
   const names = images.map((val) => prefix + val.name);
   for (let i = 0; i < images.length; i++) {
     await uploadFile(url, names[i], fields, images[i]);
-    await new Promise((resolve) => setTimeout(() => resolve(null), 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   return names;

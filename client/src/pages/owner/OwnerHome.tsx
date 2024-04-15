@@ -4,6 +4,7 @@ import Spinner from '../../components/loaders/Spinner';
 import ErrorPage from '../ErrorPage';
 import { Link } from 'react-router-dom';
 import { screenWidths } from '../../providers/ScreenProvider';
+import { useTitle } from '../../hooks/useTitle';
 
 const StyledOwnerHome = styled.div`
   display: flex;
@@ -39,6 +40,14 @@ const StyledOwnerHome = styled.div`
 
       a {
         color: red;
+      }
+    }
+
+    tr.pending {
+      border: 4px solid #ffc107;
+
+      a {
+        color: #ffc107;
       }
     }
 
@@ -88,22 +97,34 @@ const StyledOwnerHome = styled.div`
       }
 
       tr {
+        box-sizing: border-box;
         font-size: 1.2rem;
         display: flex;
         flex-direction: column;
         gap: 0.6rem;
       }
 
-      tr:not(:last-child) {
-        padding-bottom: var(--td-padding);
+      tr:first-child {
+        padding-top: 0;
+      }
+
+      tr:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+
+      tr {
         border-bottom: 1px solid black;
       }
 
-      tr:not(:first-child) {
-        padding-top: var(--td-padding);
+      tr.rejected,
+      tr.pending,
+      tr {
+        padding-block: var(--td-padding);
       }
 
-      th {
+      th,
+      thead {
         display: none;
       }
 
@@ -129,6 +150,8 @@ const StyledOwnerHome = styled.div`
 
 const OwnerHome: React.FC = () => {
   const { data, isLoading, isError, error } = useGetOwnerHomeList();
+
+  useTitle('StayEasy | Your Homes');
 
   const approved = data?.approved;
   const pending = data?.pending;
@@ -171,6 +194,25 @@ const OwnerHome: React.FC = () => {
                   <td>
                     <Link to={`/details/${rejected.id}`}>
                       Rejected. See details.
+                    </Link>
+                  </td>
+                </tr>
+              )}
+              {pending && (
+                <tr className="pending">
+                  <td>{rejected ? 2 : 1}</td>
+                  <td>
+                    <img
+                      className="home-image"
+                      src={pending.main_image}
+                      alt=""
+                    />
+                  </td>
+                  <td>{pending.name}</td>
+                  <td>{pending.address}</td>
+                  <td>
+                    <Link to={`/details/${pending.id}`}>
+                      Pending. See details.
                     </Link>
                   </td>
                 </tr>

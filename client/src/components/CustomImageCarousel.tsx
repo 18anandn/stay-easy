@@ -228,11 +228,12 @@ const CustomImageCarousel: React.FC<Props> = ({
 
   const handleNextButtonClick: MouseEventHandler = (event) => {
     event.preventDefault();
+    event.stopPropagation();
     if (currIndex < images.length - 1) {
       if (imageContainerRef.current) {
         imageContainerRef.current.scrollBy(
           imageContainerRef.current.getBoundingClientRect().width,
-          0,
+          0
         );
       }
     }
@@ -240,11 +241,12 @@ const CustomImageCarousel: React.FC<Props> = ({
 
   const handlePrevButtonClick: MouseEventHandler = (event) => {
     event.preventDefault();
+    event.stopPropagation();
     if (currIndex > 0) {
       if (imageContainerRef.current) {
         imageContainerRef.current.scrollBy(
           -imageContainerRef.current.getBoundingClientRect().width,
-          0,
+          0
         );
       }
     }

@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import logo from '../../assets/logo.png';
-
 const StyledOwnerTopNavBar = styled.div`
   padding: 1rem 5%;
   display: flex;
@@ -30,7 +28,7 @@ const OwnerTopNavBar: React.FC = () => {
   return (
     <StyledOwnerTopNavBar>
       <Link to="/" className="logo">
-        <img src={logo} alt="" />
+        <img src="https://i.imgur.com/aRe5Mvm.png" alt="" />
       </Link>
       <a href="/logout" className="log-out-link">
         Logout

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Exception } from '../data/Exception';
 
 const StyledErrorPage = styled.div`
-  padding: 2rem 5%;
 
   h1 {
     font-size: 2.5rem;

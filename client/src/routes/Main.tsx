@@ -3,7 +3,6 @@ import ProtectedRoutes from '../components/ProtectedRoutes';
 import UserRoute from '../features/auth/components/UserRoute';
 import UserLayout from '../layouts/UserLayout';
 import Booking from '../pages/Booking';
-import CreateHotel from '../pages/CreateHotel';
 import Explore from '../pages/Explore';
 import HomeInfo from '../pages/HomeInfo';
 import HomePage from '../pages/HomePage';
@@ -12,6 +11,9 @@ import Trip from '../pages/Trip';
 import TripsList from '../pages/TripsList';
 import MapSearch from '../pages/MapSearch';
 import { Auth } from './Auth';
+import { lazy } from 'react';
+
+const CreateHotel = lazy(() => import('../pages/CreateHotel'));
 
 const MainRoute = (
   <Route path="/" element={<UserLayout />}>

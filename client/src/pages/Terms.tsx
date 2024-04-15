@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { useTitle } from '../hooks/useTitle';
 
 const StyledTerms = styled.div`
-  padding: 2rem 10%;
+  padding: 2rem 8%;
 
   h1 {
     margin-bottom: 1rem;
@@ -18,6 +19,9 @@ const StyledTerms = styled.div`
 `;
 
 const Terms: React.FC = () => {
+
+  useTitle('StayEasy | Terms');
+
   return (
     <StyledTerms>
       <h1>Terms and Conditions</h1>

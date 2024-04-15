@@ -15,6 +15,7 @@ import ErrorPage from '../ErrorPage';
 import { useHomeName } from '../../features/owner/providers/HomeProvider';
 import { moneyFormatter } from '../../utils/money-formatter';
 import { screenWidths } from '../../providers/ScreenProvider';
+import { useTitle } from '../../hooks/useTitle';
 
 const tickFormatter = {
   occupancy: (val: number) => {
@@ -106,6 +107,8 @@ const OwnerAnalytics: React.FC = () => {
     ownerHomeId,
     selectedYear.value
   );
+
+  useTitle(homeName ? `Analytics | ${homeName}` : 'Analytics');
 
   const revenue = useMemo(() => {
     if (!data) return undefined;

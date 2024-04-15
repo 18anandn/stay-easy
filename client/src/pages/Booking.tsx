@@ -24,6 +24,7 @@ import { isValidInitialParams } from '../utils/isValidInitialParams';
 import { safeToUTCDate } from '../utils/dates/toUTCDate';
 import Spinner from '../components/loaders/Spinner';
 import { screenWidths } from '../providers/ScreenProvider';
+import { useTitle } from '../hooks/useTitle';
 
 const StyledBooking = styled.div`
   padding: var(--padding-block, 20px) var(--padding-inline-large, 10%);
@@ -196,6 +197,8 @@ const Booking: React.FC = () => {
   );
   const { bookingFn, isBooking } = useCreateBooking();
   const [searchParams] = useSearchParams();
+
+  useTitle(data ? `Confirm booking at ${data.name}` : undefined);
 
   useLayoutEffect(() => {
     document.documentElement.style.setProperty(

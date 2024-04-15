@@ -1,9 +1,6 @@
 import classNames from 'classnames';
-import PriceMarker, { MarkerCss } from '../../map/components/PriceMarker';
-import { MapContainer, TileLayer } from 'react-leaflet';
 import ToggleButton from '../../components/buttons/ToggleButton';
 import { MapPopupProvider } from '../../map/MapPopupProvider';
-import SetBounds from '../../map/components/SetBounds';
 import { SearchHomeListParams } from '../../features/homes/types/SearchHomeListParams';
 import { toSearchHomeURLParams } from '../../features/homes/services/searchHome';
 import { useGetMapOpenStatus } from './hooks/useMapOpenStatus';
@@ -13,6 +10,7 @@ import styled from 'styled-components';
 import { screenWidths } from '../../providers/ScreenProvider';
 import { useToggleMapValue } from './hooks/useToggleMap';
 import DotLoader from '../../components/loaders/DotLoader';
+import { MapWithTile, PriceMarker, SetBounds } from '../../map/CustomMap';
 
 const StyledMapContainer = styled.div`
   flex: 1 0 500px;
@@ -63,8 +61,6 @@ const StyledMapContainer = styled.div`
     right: 10px;
     background-color: rgba(255, 255, 255, 0.7);
   }
-
-  ${MarkerCss}
 
   @media (max-width: ${screenWidths.tab}px) {
     flex: 0 0 auto;
@@ -131,7 +127,7 @@ const MapDisplay: React.FC = () => {
           }}
         />
         {isLoading && <DotLoader />}
-        <MapContainer
+        <MapWithTile
           id="map"
           center={[51.505, -0.09]}
           zoom={13}
@@ -148,10 +144,6 @@ const MapDisplay: React.FC = () => {
           ]}
           // worldCopyJump={true}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
-          />
           {data?.homes.map((home) => (
             <PriceMarker
               key={home.id}
@@ -187,7 +179,7 @@ const MapDisplay: React.FC = () => {
               }
             }}
           />
-        </MapContainer>
+        </MapWithTile>
       </StyledMapContainer>
     </>
   );

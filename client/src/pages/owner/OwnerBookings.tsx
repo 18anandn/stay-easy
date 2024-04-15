@@ -8,12 +8,13 @@ import { useGetBookingList } from '../../features/owner/hooks/useGetBookingList'
 import { bookingFilterOptionList } from '../../features/owner/data/booking-filter-opton-list';
 import { bookingSortOptionList } from '../../features/owner/data/booking-sort-opton-list';
 import { BookingSortOption } from '../../features/owner/types/BookingSortOption';
-import { BookingFilter } from '../../features/owner/enums/BookingFilter';
+import { BookingFilterEnum } from '../../features/owner/enums/BookingFilter';
 import Spinner from '../../components/loaders/Spinner';
 import ErrorPage from '../ErrorPage';
 import { DATE_FORMAT_TEXT } from '../../data/constants';
 import { useHomeName } from '../../features/owner/providers/HomeProvider';
 import { screenWidths } from '../../providers/ScreenProvider';
+import { useTitle } from '../../hooks/useTitle';
 
 const StyledOwnerBookings = styled.div`
   /* display: flex;
@@ -226,8 +227,8 @@ const OwnerBookings: React.FC = () => {
     selectedFilter = filter ?? selectedFilter;
   }
   if (
-    selectedFilter.value === BookingFilter.CHECK_IN_TODAY ||
-    selectedFilter.value === BookingFilter.CHECK_OUT_TODAY
+    selectedFilter.value === BookingFilterEnum.CHECK_IN_TODAY ||
+    selectedFilter.value === BookingFilterEnum.CHECK_OUT_TODAY
   ) {
     selectedSort = null;
   } else if (sort_param) {
@@ -246,6 +247,8 @@ const OwnerBookings: React.FC = () => {
     selectedSort,
     page
   );
+
+  useTitle(homeName ? `Bookings | ${homeName}` : 'Bookings');
 
   return (
     <StyledOwnerBookings>
@@ -269,8 +272,8 @@ const OwnerBookings: React.FC = () => {
                   return;
                 }
                 if (
-                  val.value === BookingFilter.CHECK_IN_TODAY ||
-                  val.value === BookingFilter.CHECK_OUT_TODAY
+                  val.value === BookingFilterEnum.CHECK_IN_TODAY ||
+                  val.value === BookingFilterEnum.CHECK_OUT_TODAY
                 ) {
                   searchParams.delete('sortBy');
                   searchParams.delete('order');
@@ -280,8 +283,8 @@ const OwnerBookings: React.FC = () => {
               }}
             />
           </div>
-          {selectedFilter.value !== BookingFilter.CHECK_IN_TODAY &&
-            selectedFilter.value !== BookingFilter.CHECK_OUT_TODAY && (
+          {selectedFilter.value !== BookingFilterEnum.CHECK_IN_TODAY &&
+            selectedFilter.value !== BookingFilterEnum.CHECK_OUT_TODAY && (
               <div className="option sort">
                 <p>Sort by: </p>{' '}
                 <Select
@@ -358,7 +361,7 @@ const OwnerBookings: React.FC = () => {
         ) : (
           <p>
             There are no bookings to show.
-            {selectedFilter.value !== BookingFilter.ALL &&
+            {selectedFilter.value !== BookingFilterEnum.ALL &&
               ' Try changing the filters.'}
           </p>
         ))

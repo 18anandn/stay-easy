@@ -1,3 +1,4 @@
+import { UtilsService } from './../utils/utils.service';
 import {
   CanActivate,
   ExecutionContext,
@@ -8,12 +9,13 @@ import {
   ForbiddenException,
   applyDecorators,
   SetMetadata,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../user/guards/jwt.authguard';
 import { assertHasUser } from '../user/assertHasUser';
-import { UserRole } from '../user/UserRole.enum';
+import { UserRole } from '../user/enums/UserRole.enum';
 
 type AuthOptions = {
   passthrough?: boolean;
@@ -25,7 +27,10 @@ type AuthOptionsWithRoles = {
 
 @Injectable()
 class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private utilsService: UtilsService,
+  ) {}
 
   matchRoles(roles: UserRole[], userRole: UserRole) {
     return roles.some((role) => role === userRole);
@@ -64,6 +69,11 @@ class RolesGuard implements CanActivate {
 
       return true;
     } catch (error) {
+      // if (error instanceof UnauthorizedException) {
+      //   const res = context.switchToHttp().getResponse();
+      //   this.utilsService.removeTokenFromCookes(res);
+      //   throw error;
+      // }
       if (error instanceof HttpException) {
         throw error;
       }

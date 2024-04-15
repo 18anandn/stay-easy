@@ -2,7 +2,6 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import classNames from 'classnames';
 
-import logo from '../assets/logo.png';
 import LoginButton from '../features/auth/components/LoginButton';
 import {
   ScreenType,
@@ -217,7 +216,7 @@ const TopNavBar: React.FC = () => {
         <div className={navBarClasses}>
           <div className="content-container">
             <Link to="/" className="logo">
-              <img src={logo} alt="" />
+              <img src="https://i.imgur.com/aRe5Mvm.png" alt="" />
             </Link>
             {!location.pathname.startsWith('/book') && (
               <>

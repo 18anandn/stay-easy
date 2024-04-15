@@ -7,7 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
   imports: [TypeOrmModule.forFeature([GeocodingApiKey])],
   providers: [GeocodingService],
-  controllers: [GeocodingController],
+  // controllers: [GeocodingController],
   exports: [GeocodingService],
 })
 export class GeocodingModule {}

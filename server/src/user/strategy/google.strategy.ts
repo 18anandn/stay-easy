@@ -1,3 +1,4 @@
+import { UtilsService } from './../../utils/utils.service';
 import { AuthService } from './../auth.service';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -18,12 +19,16 @@ import { ParsedQs } from 'qs';
 export class GoogleStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
+    private readonly utilsService: UtilsService,
     private readonly authService: AuthService,
   ) {
     const options: StrategyOptions = {
       clientID: configService.getOrThrow('GOOGLE_CLIENT_ID'),
       clientSecret: configService.getOrThrow('GOOGLE_CLIENT_SECRET'),
-      callbackURL: configService.getOrThrow('GOOGLE_CLIENT_CALLBACK_URL'),
+      callbackURL: new URL(
+        configService.getOrThrow('GOOGLE_CLIENT_CALLBACK_PATH'),
+        utilsService.mainURL,
+      ).toString(),
       scope: ['profile', 'email'],
     };
     super(options);
@@ -41,7 +46,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       const user = await this.authService.handleGoogleLogin(userDetails);
       return user;
     }
-    console.log('error here');
     return null;
   }
 

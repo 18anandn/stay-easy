@@ -8,22 +8,24 @@ import { moneyFormatter } from '../../utils/money-formatter';
 
 const StyledBookingPanel = styled.div`
   padding: 1rem var(--padding-inline);
+  box-sizing: border-box;
   position: sticky;
   left: 0;
-  right: 0;
+  width: 100vw;
   z-index: 3;
   bottom: -1px;
   background-color: white;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
   /* box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px,
     rgba(14, 30, 37, 0.32) 0px 2px 16px 0px; */
 
-  & > * {
-    margin: auto;
-  }
-
   & > .price {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
     vertical-align: top;
     position: relative;
     top: -0.2rem;

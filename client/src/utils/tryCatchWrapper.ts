@@ -8,7 +8,6 @@ export const tryCatchWrapper = <T extends Array<unknown>, U>(
     try {
       return await fn(...args);
     } catch (error) {
-      console.log(error);
       if (error instanceof Exception) {
         throw error;
       }

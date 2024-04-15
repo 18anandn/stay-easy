@@ -1,5 +1,4 @@
 import { isMatch } from 'date-fns';
-import { LatLng, LatLngBounds } from 'leaflet';
 import { DATE_FORMAT_NUM } from '../../../data/constants';
 import { latlngVerify } from '../../../utils/location/latlngVerify';
 import { AMENITIES_LIST } from '../data/amenities';
@@ -151,22 +150,24 @@ export const searchHomeList = async (
 
   const { bounds: oldBounds, homes: oldHomes, ...rest } = data;
 
-  const newHomes = oldHomes.map((val) => {
-    const { location, ...restHomeData } = val;
-    return {
-      ...restHomeData,
-      location: new LatLng(location[0], location[1]),
-    };
-  });
+  // const newHomes = oldHomes.map((val) => {
+  //   const { location, ...restHomeData } = val;
+  //   return {
+  //     ...restHomeData,
+  //     location: new LatLng(location[0], location[1]),
+  //   };
+  // });
+
+  const newHomes = oldHomes.slice();
 
   const queryParams = { ...params };
-  let newBounds: LatLngBounds | undefined;
+  let newBounds: [[number, number], [number, number]] | undefined;
   if (data.bounds) {
     // data.min = data.bounds[0].reverse().join(',');
     // data.max = data.bounds[1].reverse().join(',');
     queryParams.min = data.bounds[0].join(',');
     queryParams.max = data.bounds[1].join(',');
-    newBounds = new LatLngBounds(data.bounds[0], data.bounds[1]);
+    newBounds = data.bounds;
     if (newHomes.length > 1 && params.address.length !== 0) {
       newBounds = getBbox(newHomes.map((val) => val.location));
     }

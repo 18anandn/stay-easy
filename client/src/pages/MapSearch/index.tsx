@@ -4,6 +4,7 @@ import SearchForm from './SearchForm';
 import HomeList from './HomeList';
 import MapDisplay from './MapDisplay';
 import ToggleMapButton from './ToggleMapButton';
+import { useTitle } from '../../hooks/useTitle';
 
 const StyledMapSearch = styled.div`
   --form-container-height: 70px;
@@ -43,6 +44,9 @@ const StyledMapSearch = styled.div`
 `;
 
 const MapSearch: React.FC = () => {
+
+  useTitle('StayEasy | Search')
+
   return (
     <StyledMapSearch>
       <SearchForm />

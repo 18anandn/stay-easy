@@ -1,7 +1,4 @@
-import { LatLngBounds, Map, PointExpression } from 'leaflet';
-
-const PADDING: PointExpression = [40, 50];
-const ZOOM_LEVEL: number = 10;
+import { LatLngBounds, Map } from 'leaflet';
 
 export const goToPosition = (
   position: LatLngBounds,

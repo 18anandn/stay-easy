@@ -5,9 +5,10 @@ import { customFetch } from '../../../utils/customFetch';
 
 const OwnerHomeDataSchema = z.discriminatedUnion('verification_status', [
   OwnerHomeDataBase.extend({
-    verification_status: z
-      .literal(VerificationEnum.Pending)
-      .or(z.literal(VerificationEnum.Approved)),
+    verification_status: z.enum([
+      VerificationEnum.Approved,
+      VerificationEnum.Pending,
+    ]),
   }),
   OwnerHomeDataBase.extend({
     message: z.string(),

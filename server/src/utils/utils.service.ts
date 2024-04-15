@@ -15,12 +15,19 @@ export class UtilsService {
   readonly domain_name: string;
   readonly token_cookie = 'token';
   readonly login_cookie = 'logged-in';
+  readonly mainURL!: string;
+  readonly authURL!: string;
+  readonly ownerURL!: string;
+  readonly adminURL!: string;
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {
     this.domain_name = this.configService.getOrThrow('DOMAIN');
-    // this.domain_name = undefined;
+    this.mainURL = `http://www.${this.domain_name}`;
+    this.authURL = `http://auth.${this.domain_name}`;
+    this.adminURL = `http://admin.${this.domain_name}`;
+    this.ownerURL = `http://owner.${this.domain_name}`;
   }
 
   createJwt(payload: Object) {

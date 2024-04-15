@@ -2,11 +2,14 @@ import { AuthService } from './auth.service';
 import { UtilsService } from '../utils/utils.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   HttpStatus,
+  Param,
   Post,
+  Query,
   Req,
   Res,
 } from '@nestjs/common';
@@ -18,6 +21,10 @@ import {
   GoogleOptionalAuthGuard,
 } from './guards/google.authguard';
 import { isLatLong, isNumber } from 'class-validator';
+import { UserIdDto } from './dtos/user-id.dto';
+import { VerificationTokenDto } from './dtos/verification-token.dto';
+import { HandleForgetPasswordDto } from './dtos/handle-forget-password.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 
 @Controller('api/v1/auth')
 export class AuthController {
@@ -31,15 +38,23 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const user = await this.authService.getUserFromCookie(req);
+    const user = await this.authService.getUserFromCookie(req, res);
     if (user) return user;
-    res.sendStatus(HttpStatus.NO_CONTENT);
+    res.status(HttpStatus.NO_CONTENT);
   }
 
   @Post('/signup')
   async signup(@Body() createUserDto: CreateUserDto) {
     const user = await this.authService.signup(createUserDto);
     return user;
+  }
+
+  @Get('verify/:userId')
+  verifyUser(
+    @Param() { userId }: UserIdDto,
+    @Query() { token }: VerificationTokenDto,
+  ) {
+    return this.authService.verifyUserToken(userId, token);
   }
 
   @Post('/login')
@@ -51,6 +66,20 @@ export class AuthController {
       id: user.id,
     });
     return user;
+  }
+
+  @Post('/reset-password')
+  handleForgetPassword(@Body() { email }: HandleForgetPasswordDto) {
+    return this.authService.handleForgetPassword(email);
+  }
+
+  @Post('/reset-password/:userId')
+  handleResetUserPassword(
+    @Param() { userId }: UserIdDto,
+    @Query() { token }: VerificationTokenDto,
+    @Body() newPassword: ResetPasswordDto,
+  ) {
+    return this.authService.handleResetUserPassword(userId, token, newPassword);
   }
 
   @Get('/google')

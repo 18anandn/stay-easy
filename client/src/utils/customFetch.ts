@@ -32,8 +32,6 @@ export const customFetch: CustomFetchFuntionType = async (
     const returnData = schema.parse(data);
     return returnData;
   } catch (error) {
-    console.log(error);
-
     if (error instanceof Exception) {
       throw error;
     }

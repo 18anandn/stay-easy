@@ -1,10 +1,13 @@
-import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { getFormattedLocation } from '../../utils/location/format-location';
 import ImageViewer from './ImageViewer';
 import { DataProps } from './types/DataProps';
 import Description from './Description';
+import { DefaultMarker, MapWithTile } from '../../map/CustomMap';
+import { useTitle } from '../../hooks/useTitle';
 
 const Info: React.FC<DataProps> = ({ data }) => {
+  useTitle(data.name);
+
   return (
     <>
       <h1 className="home-name">{data.name}</h1>
@@ -25,18 +28,14 @@ const Info: React.FC<DataProps> = ({ data }) => {
         <div className="map">
           <h2>Location</h2>
           <div className="map-container">
-            <MapContainer
+            <MapWithTile
               id="map"
               center={data.location}
               zoom={13}
               scrollWheelZoom={false}
             >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
-              />
-              <Marker position={data.location} />
-            </MapContainer>
+              <DefaultMarker position={data.location} />
+            </MapWithTile>
           </div>
         </div>
       </div>

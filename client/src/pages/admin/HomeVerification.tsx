@@ -164,7 +164,6 @@ const HomeVerification: React.FC = () => {
     updateHomeData(data, {
       onError: (err) => {
         toast.error(err.message);
-        console.log(err.message);
       },
     });
   };

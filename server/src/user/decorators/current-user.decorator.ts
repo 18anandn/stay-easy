@@ -1,7 +1,7 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import { Request } from 'express';
 import { assertHasUser } from '../assertHasUser';
-import { UserRole } from '../UserRole.enum';
+import { UserRole } from '../enums/UserRole.enum';
 
 declare global {
   namespace Express {

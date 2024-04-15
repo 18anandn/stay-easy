@@ -4,10 +4,12 @@ import { Link, useParams } from 'react-router-dom';
 import ErrorPage from '../ErrorPage';
 import Spinner from '../../components/loaders/Spinner';
 import CustomImageCarousel from '../../components/CustomImageCarousel';
-import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { moneyFormatter } from '../../utils/money-formatter';
 import { screenWidths } from '../../providers/ScreenProvider';
 import { getFormattedLocation } from '../../utils/location/format-location';
+import { DefaultMarker, MapWithTile } from '../../map/CustomMap';
+import { useTitle } from '../../hooks/useTitle';
+import { useHomeName } from '../../features/owner/providers/HomeProvider';
 
 const StyledOwnerDashboard = styled.div`
   h2 {
@@ -28,17 +30,19 @@ const StyledOwnerDashboard = styled.div`
 
     .details {
       ul {
-        list-style-position: inside;
         display: flex;
         flex-direction: column;
         gap: 0.3rem;
         font-size: 1.1rem;
       }
+
+      li {
+        word-break: break-all;
+      }
     }
 
     .stats {
       ul {
-        list-style-position: inside;
         display: flex;
         flex-direction: column;
         gap: 0.3rem;
@@ -81,10 +85,6 @@ const StyledOwnerDashboard = styled.div`
       h3 {
         margin-bottom: 0.5rem;
       }
-
-      ul {
-        list-style-position: inside;
-      }
     }
   }
 
@@ -96,85 +96,80 @@ const StyledOwnerDashboard = styled.div`
 
 const OwnerDashboard: React.FC = () => {
   const { ownerHomeId } = useParams();
+  const homeName = useHomeName();
   const { data, isLoading, isError, error } =
     useGetVerifiedHomeData(ownerHomeId);
 
-  if (isError || (!isLoading && !data)) {
-    return <ErrorPage error={error} />;
-  }
+  useTitle(homeName ? `Dashboard | ${homeName}` : 'Dashboard');
 
   return (
     <StyledOwnerDashboard>
       {isLoading ? (
         <Spinner />
+      ) : isError || !data ? (
+        <ErrorPage error={error} />
       ) : (
-        data && (
-          <>
-            <h2>Dashboard</h2>
-            <div className="info">
-              <div className="details">
-                <h3>Details</h3>
-                <ul>
-                  <li>
-                    Place:{' '}
-                    {getFormattedLocation(data.city, data.state, data.country)}
-                  </li>
-                  <li>Address: {data.address}</li>
-                  <li>
-                    Coordinates:{' '}
-                    {[data.location.lat, data.location.lng].join(', ')}
-                  </li>
-                  <li>Number of cabins: {data.number_of_cabins}</li>
-                  <li>Cabin capacity: {data.cabin_capacity}</li>
-                </ul>
-              </div>
-              <div className="stats">
-                <h3>Stats</h3>
-                <ul>
-                  <li>Revenue: {moneyFormatter(data.revenue)}</li>
-                  <li>Total bookings: {data.total_bookings}</li>
-                  <li>
-                    <Link to="analytics">See analytics &gt;</Link>
-                  </li>
-                  <li>
-                    <Link to="bookings">See bookings &gt;</Link>
-                  </li>
-                </ul>
-              </div>
-              <div className="images">
-                <h3>Images</h3>
-                <div className="carousel">
-                  <CustomImageCarousel images={data.images} />
-                </div>
-              </div>
-              <div className="map">
-                <h3>Location</h3>
-                <MapContainer
-                  id="map"
-                  center={data.location}
-                  zoom={13}
-                  scrollWheelZoom={false}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={data.location} />
-                </MapContainer>
-              </div>
-              {data.amenities && data.amenities.length !== 0 && (
-                <div className="amenities">
-                  <h3>Amenities</h3>
-                  <ul>
-                    {data.amenities.map((val) => (
-                      <li key={val}>{val}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+        <>
+          <h2>Dashboard</h2>
+          <div className="info">
+            <div className="details">
+              <h3>Details</h3>
+              <ul>
+                <li>
+                  Place:{' '}
+                  {getFormattedLocation(data.city, data.state, data.country)}
+                </li>
+                <li>Address: {data.address}</li>
+                <li>
+                  Coordinates:{' '}
+                  {[data.location.lat, data.location.lng].join(', ')}
+                </li>
+                <li>Number of cabins: {data.number_of_cabins}</li>
+                <li>Cabin capacity: {data.cabin_capacity}</li>
+              </ul>
             </div>
-          </>
-        )
+            <div className="stats">
+              <h3>Stats</h3>
+              <ul>
+                <li>Revenue: {moneyFormatter(data.revenue)}</li>
+                <li>Total bookings: {data.total_bookings}</li>
+                <li>
+                  <Link to="analytics">See analytics &gt;</Link>
+                </li>
+                <li>
+                  <Link to="bookings">See bookings &gt;</Link>
+                </li>
+              </ul>
+            </div>
+            <div className="images">
+              <h3>Images</h3>
+              <div className="carousel">
+                <CustomImageCarousel images={data.images} />
+              </div>
+            </div>
+            <div className="map">
+              <h3>Location</h3>
+              <MapWithTile
+                id="map"
+                center={data.location}
+                zoom={13}
+                scrollWheelZoom={false}
+              >
+                <DefaultMarker position={data.location} />
+              </MapWithTile>
+            </div>
+            {data.amenities && data.amenities.length !== 0 && (
+              <div className="amenities">
+                <h3>Amenities</h3>
+                <ul>
+                  {data.amenities.map((val) => (
+                    <li key={val}>{val}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </StyledOwnerDashboard>
   );

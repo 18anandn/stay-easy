@@ -11,6 +11,9 @@ const GlobalStyles = createGlobalStyle`
 
     --owner-nav-width: 16rem;
     --owner-button-width: 25px;
+
+    --max-modal-height: 100svh;
+    --max-modal-width: 100svw;
   }
 
  * {

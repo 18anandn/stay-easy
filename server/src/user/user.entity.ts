@@ -8,15 +8,21 @@ import {
 import { Home } from '../home/home.entity';
 import { Booking } from '../booking/booking.entity';
 import { EnumValues } from '../types/EnumValues';
-import { UserRole, UserRoleEnum } from './UserRole.enum';
+import { UserRole, UserRoleEnum } from './enums/UserRole.enum';
 
 @Entity('user')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'boolean', nullable: false, default: true })
+  @Column({ type: 'boolean', nullable: false, default: false })
   verified!: boolean;
+
+  @Column({ type: 'boolean', nullable: false, default: false })
+  forgot_password!: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  verification_token: string | null = null;
 
   @Column({ type: 'varchar', length: 20, nullable: false })
   first_name!: string;
@@ -29,7 +35,7 @@ export class User {
   email!: string;
 
   @Column({ type: 'varchar', length: 72, nullable: true })
-  password?: string;
+  password: string | null = null;
 
   @Column({
     type: 'enum',

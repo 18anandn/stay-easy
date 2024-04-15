@@ -65,14 +65,14 @@ const StyledHomeList = styled.div`
   }
 
   .custom-spinner {
-    font-size: 0.07rem;
+    font-size: 0.055rem;
   }
 
   .content-box {
     height: 100%;
     /* width: 100%; */
-    padding: 30px var(--grid-padding);
   }
+  padding: 30px var(--grid-padding);
 
   .header {
     margin-bottom: 20px;

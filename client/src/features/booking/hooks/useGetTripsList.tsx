@@ -3,15 +3,8 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTripList } from '../services/getTripList';
 import { TripSortOption } from '../types/TripSortOption';
 
-export const useGetTripsList = (sortBy: TripSortOption) => {
-  const {
-    data,
-    fetchNextPage,
-    isLoading,
-    isFetching,
-    isFetchingNextPage,
-    hasNextPage,
-  } = useInfiniteQuery({
+export const useGetTripsList = (sortBy: TripSortOption) =>
+  useInfiniteQuery({
     queryKey: ['trips', sortBy.value],
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => getTripList(pageParam, sortBy),
@@ -23,13 +16,3 @@ export const useGetTripsList = (sortBy: TripSortOption) => {
     },
     staleTime: Infinity,
   });
-
-  return {
-    data,
-    fetchNextPage,
-    isLoading,
-    isFetching,
-    isFetchingNextPage,
-    hasNextPage,
-  };
-};

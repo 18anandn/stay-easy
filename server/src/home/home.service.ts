@@ -40,7 +40,7 @@ import { DatabaseError } from 'pg-protocol';
 import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 import { getTimeZoneDifference } from '../utility/getTimeZoneDifference';
 import { S3File } from '../upload/s3file.entity';
-import { UserRoleEnum } from '../user/UserRole.enum';
+import { UserRoleEnum } from '../user/enums/UserRole.enum';
 import { VerificationEnum } from './Verification.enum';
 
 @Injectable()
@@ -52,48 +52,7 @@ export class HomeService {
     private uploadService: UploadService,
   ) {}
 
-  async createHome(
-    {
-      name,
-      location: coords,
-      price,
-      price_per_guest,
-      address,
-      number_of_cabins,
-      cabin_capacity,
-      amenities,
-      images,
-      description,
-    }: CreateHomeDto,
-    user: CurrentUserDto,
-  ) {
-    // const [lat, lng] = coords
-    //   .replace(' ', '')
-    //   .split(',')
-    //   .map((val) => parseFloat(val));
-    // const {
-    //   city,
-    //   state,
-    //   country,
-    //   formatted: complete_address,
-    // } = await this.geocodingService.getAddress(lat, lng);
-    // if (!city || !state || !country) {
-    //   throw new BadRequestException('Given location is unregistered');
-    // }
-    // if ((country as string).toLowerCase() !== 'india') {
-    //   throw new BadRequestException('Please choose a location in India');
-    // }
-
-    const location: Point = {
-      type: 'Point',
-      // IMPORTANT! Longitude comes first in GeoJSON.
-      coordinates: coords
-        .replace(' ', '')
-        .split(',')
-        .map((val) => parseFloat(val))
-        .reverse(),
-    };
-
+  async verifyCreateHomeData(user: CurrentUserDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -113,9 +72,11 @@ export class HomeService {
         where: { owner_id: userInfo.id },
         select: {
           main_image: {
+            id: true,
             object_key: true,
           },
           extra_images: {
+            id: true,
             object_key: true,
           },
         },
@@ -133,25 +94,73 @@ export class HomeService {
             'You already have already submitted another home for approval',
           );
         }
-        const rejectedHome = prevHomes.find(
-          (val) => val.verification_status === VerificationEnum.Rejected,
+      }
+      await queryRunner.commitTransaction();
+      return { prevHomes, userInfo };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'There was an error while verifying the data',
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async createHome(
+    {
+      name,
+      location: coords,
+      price,
+      price_per_guest,
+      address,
+      number_of_cabins,
+      cabin_capacity,
+      amenities,
+      images,
+      description,
+    }: CreateHomeDto,
+    user: CurrentUserDto,
+  ) {
+    const location: Point = {
+      type: 'Point',
+      // IMPORTANT! Longitude comes first in GeoJSON.
+      coordinates: coords
+        .replace(' ', '')
+        .split(',')
+        .map((val) => parseFloat(val))
+        .reverse(),
+    };
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const homeRepo = queryRunner.manager.getRepository(Home);
+      const userRepo = queryRunner.manager.getRepository(User);
+      const { prevHomes, userInfo } = await this.verifyCreateHomeData(user);
+      const rejectedHome = prevHomes.find(
+        (val) => val.verification_status === VerificationEnum.Rejected,
+      );
+      if (rejectedHome) {
+        const { main_image, extra_images } = rejectedHome;
+        const imagesToDelete = [main_image, ...extra_images];
+        const imageRepo = queryRunner.manager.getRepository(S3File);
+        await this.uploadService.deleteImages(
+          imagesToDelete.map((image) => image.object_key),
         );
-        if (rejectedHome) {
-          const { main_image, extra_images } = rejectedHome;
-          const imagesToDelete = [main_image, ...extra_images];
-          const imageRepo = queryRunner.manager.getRepository(S3File);
-          await this.uploadService.deleteImages(
-            imagesToDelete.map((image) => image.object_key),
-          );
-          await homeRepo.remove(rejectedHome);
-          await imageRepo.remove(imagesToDelete);
-        }
+        await homeRepo.remove(rejectedHome);
+        await imageRepo.remove(imagesToDelete);
       }
 
       if (userInfo.role === UserRoleEnum.USER) {
         userInfo.role = UserRoleEnum.OWNER;
         await userRepo.save(userInfo);
       }
+
       const query = {
         name,
         address,
@@ -458,6 +467,7 @@ export class HomeService {
         ),
       };
     });
+
     return { homes: arr, count, items_per_page };
   }
 

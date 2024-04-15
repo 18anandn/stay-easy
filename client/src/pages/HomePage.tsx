@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import homePageImage from '../assets/homepage.png';
 import { screenWidths } from '../providers/ScreenProvider';
 
 const StyledHome = styled.div`
@@ -52,7 +51,11 @@ const HomePage: React.FC = () => {
         <br />
         Anytime! Anywhere!
       </h1>
-      <img className="home-image" src={homePageImage} alt="" />
+      <img
+        className="home-image"
+        src="https://i.imgur.com/oFpPUF9.png"
+        alt=""
+      />
     </StyledHome>
   );
 };

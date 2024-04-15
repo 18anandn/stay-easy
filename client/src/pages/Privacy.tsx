@@ -1,7 +1,8 @@
 import styled from 'styled-components';
+import { useTitle } from '../hooks/useTitle';
 
 const StyledPrivacy = styled.div`
-  padding: 2rem 10%;
+  padding: 2rem 8%;
 
   h1 {
     margin-bottom: 1rem;
@@ -10,7 +11,7 @@ const StyledPrivacy = styled.div`
   h2 {
     margin: 1.5rem 0 0.5rem 0;
   }
-  
+
   ol {
     /* list-style-position: inside; */
 
@@ -25,6 +26,9 @@ const StyledPrivacy = styled.div`
 `;
 
 const Privacy: React.FC = () => {
+
+  useTitle('StayEasy | Privacy');
+
   return (
     <StyledPrivacy>
       <h1>Privacy Policy</h1>

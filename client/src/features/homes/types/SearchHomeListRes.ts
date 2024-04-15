@@ -1,11 +1,7 @@
 import { SearchHomeListParams } from './SearchHomeListParams';
-import {
-  HomeCardWithLocation,
-  HomeCardWithLocationSchema,
-} from './HomeCardWithLocation';
+import { HomeCardWithLocationSchema } from './HomeCardWithLocation';
 import { z } from 'zod';
 import { zodLatLng } from '../../../utils/zodHelpers/zodLatLng';
-import { LatLngBounds } from 'leaflet';
 
 export const SearchHomeListResSchema = z.object({
   homes: HomeCardWithLocationSchema.array(),
@@ -19,13 +15,8 @@ export const SearchHomeListResSchema = z.object({
   items_per_page: z.number({ coerce: true }).int(),
 });
 
-export type SearchHomeListRes = Omit<
-  z.infer<typeof SearchHomeListResSchema>,
-  'homes' | 'bounds'
-> & {
-  homes: HomeCardWithLocation[];
+export type SearchHomeListRes = z.infer<typeof SearchHomeListResSchema> & {
   params: SearchHomeListParams;
-  bounds?: LatLngBounds;
   // min?: string;
   // max?: string;
   totalPages: number;

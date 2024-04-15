@@ -8,6 +8,7 @@ import HomeCard from '../features/homes/components/HomeCard';
 import Spinner from '../components/loaders/Spinner';
 import { screenWidths } from '../providers/ScreenProvider';
 import toast from 'react-hot-toast';
+import { useTitle } from '../hooks/useTitle';
 
 const StyledExplore = styled.div`
   box-sizing: border-box;
@@ -71,6 +72,8 @@ const Explore: React.FC = () => {
   } = useGetHomesList();
   const { containerRef, isVisible } = useObserver();
 
+  useTitle('StayEasy | Explore');
+
   useEffect(() => {
     if (!isFetching && !isFetchingNextPage && isVisible && hasNextPage) {
       fetchNextPage();
@@ -82,7 +85,7 @@ const Explore: React.FC = () => {
       toast.error(error.message);
     }
   }, [error]);
-
+  
   return (
     <StyledExplore>
       {data && (

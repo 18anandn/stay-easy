@@ -8,9 +8,10 @@ import ErrorPage from './ErrorPage';
 import { getFormattedLocation } from '../utils/location/format-location';
 import { format } from 'date-fns';
 import { moneyFormatter } from '../utils/money-formatter';
-import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { DATE_FORMAT_TEXT } from '../data/constants';
 import { screenWidths } from '../providers/ScreenProvider';
+import { DefaultMarker, MapWithTile } from '../map/CustomMap';
+import { useTitle } from '../hooks/useTitle';
 
 const StyledTrip = styled.div`
   padding-left: 5%;
@@ -141,6 +142,9 @@ const StyledTrip = styled.div`
 const Trip: React.FC = () => {
   const { tripId } = useParams();
   const { data, isLoading, error } = useGetTrip(tripId ?? 'none');
+
+  useTitle(data ? `Your trip at ${data.home.name}` : undefined);
+
   return (
     <StyledTrip>
       {isLoading ? (
@@ -197,18 +201,14 @@ const Trip: React.FC = () => {
             </table>
           </div>
           <div className="right-column">
-            <MapContainer
+            <MapWithTile
               id="map"
               center={data.home.location}
               zoom={13}
               scrollWheelZoom={false}
             >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
-              />
-              <Marker position={data.home.location} />
-            </MapContainer>
+              <DefaultMarker position={data.home.location} />
+            </MapWithTile>
           </div>
         </div>
       ) : (

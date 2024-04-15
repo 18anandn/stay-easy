@@ -94,7 +94,6 @@ const Input: React.FC<Props> = ({ maxFiles, name }) => {
     const fileList: File[] = [];
     for (let i = 0; i < selectedFiles.length; i++) {
       const file = selectedFiles[i];
-      console.log(file.size);
       if (file.size > MAX_IMAGE_SIZE) {
         toast.error(`Max file size allowed is ${MAX_IMAGE_SIZE_KB} KB`, {
           id: 'file type allowed',

@@ -22,6 +22,5 @@ export const getHomeDetails = async (homeId: string): Promise<HomeDetails> => {
     ),
   };
 
-
   return homeData;
 };

@@ -5,16 +5,12 @@ import {
   NestModule,
   ValidationPipe,
 } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeORMExceptionFilter } from './filters/typeorm-exception.filter';
 import cookieParser from 'cookie-parser';
-import { delayer } from './middlewares/delay-response.middleware';
-import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HomeModule } from './home/home.module';
 import { CabinModule } from './cabin/cabin.module';
@@ -22,16 +18,17 @@ import { BookingModule } from './booking/booking.module';
 import { AmenityModule } from './amenity/amenity.module';
 import { GeocodingModule } from './geocoding/geocoding.module';
 import { UploadModule } from './upload/upload.module';
-import { TestModule } from './test/test.module';
-import { join } from 'path';
 import { AdminModule } from './admin/admin.module';
-import { NotFoundModule } from './not-found/not-found.module';
 import { OwnerModule } from './owner/owner.module';
-import express from 'express';
-import { ServeStaticMiddleware } from './middlewares/serve-static.middleware';
-import { CacheModule, CacheStore } from '@nestjs/cache-manager';
+import { CacheModule } from '@nestjs/cache-manager';
 import { RedisClientOptions } from 'redis';
 import { redisStore } from 'cache-manager-redis-yet';
+import { ScheduleModule } from '@nestjs/schedule';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ValidationError } from 'class-validator';
+import { AllExceptionsFilter } from './exceptions-filters/all.exceptions-filter';
+import { NotFoundModule } from './not-found/not-found.module';
+
 
 @Module({
   imports: [
@@ -40,7 +37,7 @@ import { redisStore } from 'cache-manager-redis-yet';
     // }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env`,
+      envFilePath: `.env.${process.env.NODE_ENV === 'dev' ? 'dev' : 'prod'}`,
     }),
     CacheModule.registerAsync<RedisClientOptions>({
       isGlobal: true,
@@ -48,11 +45,11 @@ import { redisStore } from 'cache-manager-redis-yet';
       useFactory: async (configService: ConfigService) => {
         const store = await redisStore({
           socket: {
-            host: configService.getOrThrow('QUEUE_HOST'),
-            port: configService.getOrThrow('QUEUE_PORT'),
+            host: configService.getOrThrow('REDIS_HOST'),
+            port: configService.getOrThrow('REDIS_PORT'),
           },
-          username: configService.getOrThrow('QUEUE_USER'),
-          password: configService.getOrThrow('QUEUE_PASSWORD'),
+          username: configService.getOrThrow('REDIS_USER'),
+          password: configService.getOrThrow('REDIS_PASSWORD'),
         });
         return {
           store,
@@ -80,23 +77,29 @@ import { redisStore } from 'cache-manager-redis-yet';
           //     password: configService.getOrThrow('QUEUE_PASSWORD'),
           //   },
           // },
-          synchronize: configService.getOrThrow('NODE_ENV') === 'development',
+          synchronize: configService.getOrThrow('NODE_ENV') === 'dev',
         };
       },
       inject: [ConfigService],
     }),
-    // BullModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => ({
-    //     redis: {
-    //       host: configService.getOrThrow('QUEUE_HOST'),
-    //       port: configService.getOrThrow('QUEUE_PORT'),
-    //       username: configService.getOrThrow('QUEUE_USER'),
-    //       password: configService.getOrThrow('QUEUE_PASSWORD'),
-    //     },
-    //   }),
-    //   inject: [ConfigService],
-    // }),
+    ScheduleModule.forRoot(),
+    MailerModule.forRootAsync({
+      useFactory: async (configService: ConfigService) => {
+        return {
+          transport: {
+            service: 'gmail',
+            auth: {
+              user: configService.getOrThrow('MAIL_ADDRESS'),
+              pass: configService.getOrThrow('MAIL_PASSWORD'),
+            },
+          },
+          defaults: {
+            from: configService.getOrThrow('MAIL_ADDRESS'),
+          },
+        };
+      },
+      inject: [ConfigService],
+    }),
     UserModule,
     HomeModule,
     CabinModule,
@@ -104,17 +107,16 @@ import { redisStore } from 'cache-manager-redis-yet';
     AmenityModule,
     GeocodingModule,
     UploadModule,
-    TestModule,
     AdminModule,
     OwnerModule,
-    // NotFoundModule,
+    NotFoundModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_FILTER,
-      useClass: TypeORMExceptionFilter,
+      useClass: AllExceptionsFilter,
     },
     {
       provide: APP_PIPE,
@@ -122,6 +124,20 @@ import { redisStore } from 'cache-manager-redis-yet';
         whitelist: true,
         transform: true,
         transformOptions: { enableImplicitConversion: true },
+        exceptionFactory: (validationErrors: ValidationError[] = []) => {
+          const errorMessages: string[] = [];
+
+          return new BadRequestException(
+            validationErrors
+              .reduce((arr, curr) => {
+                if (curr.constraints) {
+                  arr.push(Object.values(curr.constraints).join(', '));
+                }
+                return arr;
+              }, errorMessages)
+              .join('\n'),
+          );
+        },
         // exceptionFactory: (errors) => {
         //   const error = !!errors[0].children.length
         //     ? errors[0].children[0].constraints

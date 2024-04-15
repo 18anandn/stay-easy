@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import Select from 'react-select';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 
 import { useGetTripsList } from '../features/booking/hooks/useGetTripsList';
 import Loader from '../components/loaders/Loader';
@@ -11,6 +11,8 @@ import Button from '../components/buttons/Button';
 import { getFormattedLocation } from '../utils/location/format-location';
 import { toUTCDate } from '../utils/dates/toUTCDate';
 import { tripsSortOptionList } from '../features/booking/data/tripSortOptionList';
+import { useTitle } from '../hooks/useTitle';
+import toast from 'react-hot-toast';
 
 const StyledTrips = styled.div`
   padding: 30px 5%;
@@ -98,8 +100,22 @@ const TripsList: React.FC = () => {
     tripsSortOptionList.find(
       (option) => option.value === searchParams.get('sortBy')
     ) ?? tripsSortOptionList[0];
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useGetTripsList(sortBy);
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = useGetTripsList(sortBy);
+
+  useTitle('Your Trips');
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
 
   return (
     <StyledTrips>

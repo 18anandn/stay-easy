@@ -1,4 +1,7 @@
 .env*
+*.ppk
+*.pem
+*.sql
 /mongoDB
 
 # compiled output

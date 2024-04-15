@@ -3,9 +3,9 @@ import { useLayoutEffect } from 'react';
 import styled from 'styled-components';
 import { useCurrentUser } from '../../features/auth/hooks/useCurrentUser';
 import Spinner from '../../components/loaders/Spinner';
-import ErrorPage from '../../pages/ErrorPage';
 import { UserRole } from '../../features/auth/enums/UserRole.enum';
 import { Exception } from '../../data/Exception';
+import ErrorPageWithPadding from '../../pages/ErrorPageWithPadding';
 
 const StyledRedirect = styled.div`
   padding: 2rem 8%;
@@ -59,7 +59,7 @@ const OwnerAppLayout: React.FC = () => {
   }
 
   if (isError) {
-    return <ErrorPage error={error} />;
+    return <ErrorPageWithPadding error={error} />;
   }
 
   if (currentUser) {
@@ -71,7 +71,7 @@ const OwnerAppLayout: React.FC = () => {
     }
 
     return (
-      <ErrorPage
+      <ErrorPageWithPadding
         error={new Exception('Unauthorized to access this page', 403)}
       />
     );
