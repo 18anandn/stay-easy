@@ -57,7 +57,6 @@ export class UtilsService {
       domain: this.domain_name,
       path: '/',
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') !== 'development',
       signed: true,
     });
     res.cookie(this.login_cookie, this.login_cookie, {

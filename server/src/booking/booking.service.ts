@@ -3,6 +3,7 @@ import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { isUUID } from 'class-validator';
@@ -38,6 +39,33 @@ export class BookingService {
     }
     if (!isUUID(homeId, 4)) {
       throw new NotFoundException(`No home with id: ${homeId}`);
+    }
+
+    const futureBookings: unknown = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .select('COALESCE(COUNT(*), 0)', 'count')
+      .innerJoin('booking.home', 'home')
+      .where(
+        'booking.from_date AT TIME ZONE home.time_zone > CURRENT_TIMESTAMP',
+      )
+      .andWhere('booking.user_id = :userId', { userId: user.id })
+      .getRawOne();
+
+    if (
+      futureBookings &&
+      typeof futureBookings === 'object' &&
+      'count' in futureBookings
+    ) {
+      const count = Number(futureBookings.count);
+      if (count >= 10) {
+        throw new BadRequestException(
+          'Maximum 10 future bookings allowed',
+        );
+      }
+    } else {
+      throw new InternalServerErrorException(
+        'There was an error while booking',
+      );
     }
 
     const args = {

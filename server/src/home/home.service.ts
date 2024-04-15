@@ -53,6 +53,9 @@ export class HomeService {
   ) {}
 
   async verifyCreateHomeData(user: CurrentUserDto) {
+    if (user.email === 'test@test.com') {
+      throw new BadRequestException('Cannot register with test account');
+    }
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -83,7 +86,7 @@ export class HomeService {
         relations: { main_image: true, extra_images: true },
       });
       if (prevHomes && prevHomes.length !== 0) {
-        if (prevHomes.length >= 5 && userInfo.email !== 'test@test.com') {
+        if (prevHomes.length >= 5) {
           throw new BadRequestException('You can register max 5 homes');
         }
         const pendingHome = prevHomes.find(

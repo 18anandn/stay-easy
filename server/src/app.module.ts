@@ -28,7 +28,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ValidationError } from 'class-validator';
 import { AllExceptionsFilter } from './exceptions-filters/all.exceptions-filter';
 import { NotFoundModule } from './not-found/not-found.module';
-
+import fs from 'fs';
+import path from 'path';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { NotFoundModule } from './not-found/not-found.module';
           socket: {
             host: configService.getOrThrow('REDIS_HOST'),
             port: configService.getOrThrow('REDIS_PORT'),
+            tls: configService.get('NODE_ENV') !== 'dev',
           },
           username: configService.getOrThrow('REDIS_USER'),
           password: configService.getOrThrow('REDIS_PASSWORD'),
@@ -66,6 +68,7 @@ import { NotFoundModule } from './not-found/not-found.module';
           username: configService.getOrThrow('DB_USER'),
           password: configService.getOrThrow('DB_PASSWORD'),
           database: configService.getOrThrow('DB_NAME'),
+          ssl: { rejectUnauthorized: false },
           autoLoadEntities: true,
           useUTC: true,
           // cache: {
@@ -77,7 +80,7 @@ import { NotFoundModule } from './not-found/not-found.module';
           //     password: configService.getOrThrow('QUEUE_PASSWORD'),
           //   },
           // },
-          synchronize: configService.getOrThrow('NODE_ENV') === 'dev',
+          synchronize: configService.get('NODE_ENV') === 'dev',
         };
       },
       inject: [ConfigService],

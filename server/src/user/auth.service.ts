@@ -115,6 +115,9 @@ export class AuthService {
   }
 
   async handleForgetPassword(email: string) {
+    if (email === 'test@test.com') {
+      throw new BadRequestException('Cannot reset password for test account');
+    }
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -242,6 +245,7 @@ export class AuthService {
       const { id } = await this.utilsService.isTokenValid(token);
       const user = await this.usersRepository.findOneBy({ id });
       if (!user) {
+        console.log('remv');
         this.utilsService.removeTokenFromCookes(res);
         return null;
       }
