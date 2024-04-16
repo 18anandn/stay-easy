@@ -14,6 +14,7 @@ import { validate as validator } from 'class-validator';
 import { Request } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
+import { validationErrorParse } from '../../utility/validationErrorParse';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
@@ -39,13 +40,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     const userDetails = new GoogleUserDetailsDto();
     userDetails.email = profile.emails![0].value;
     userDetails.first_name = profile.name!.givenName;
-    userDetails.last_name = profile.name!.familyName;
+    userDetails.last_name = profile.name?.familyName;
     const errors = await validator(userDetails, { whitelist: true });
     if (errors.length === 0) {
       const user = await this.authService.handleGoogleLogin(userDetails);
       return user;
     }
-    return null;
+    return validationErrorParse(errors);
   }
 
   // authenticate(

@@ -2,9 +2,9 @@ import styled from 'styled-components';
 import Button from '../components/buttons/Button';
 import { useNavigate } from 'react-router-dom';
 import { Exception } from '../data/Exception';
+import { Subdomain, getSubdomain } from '../utils/getSubdomain';
 
 const StyledErrorPage = styled.div`
-
   h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
@@ -28,8 +28,25 @@ type Props = {
 const ErrorPage: React.FC<Props> = ({ error }) => {
   const navigate = useNavigate();
 
-  const goBack = (): void => {
-    navigate(-1);
+  const goBack = () => {
+    if (getSubdomain() === Subdomain.MAIN) {
+      navigate(-1);
+    } else {
+      window.history.back();
+    }
+  };
+
+  const goHome = () => {
+    if (
+      getSubdomain() !== Subdomain.MAIN &&
+      error &&
+      error instanceof Exception &&
+      (error.statusCode === 401 || error.statusCode === 403)
+    ) {
+      window.location.replace('/auth');
+    } else {
+      navigate('/', { replace: true });
+    }
   };
 
   let heading = 'Error occured';
@@ -53,7 +70,7 @@ const ErrorPage: React.FC<Props> = ({ error }) => {
           Go back
         </Button>
         {/* )} */}
-        <Button type="button" onClick={() => navigate('/', { replace: true })}>
+        <Button type="button" onClick={goHome}>
           Home
         </Button>
       </div>

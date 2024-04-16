@@ -31,6 +31,7 @@ import { NotFoundModule } from './not-found/not-found.module';
 import fs from 'fs';
 import path from 'path';
 import { delayer } from './middlewares/delay-response.middleware';
+import { validationErrorParse } from './utility/validationErrorParse';
 
 @Module({
   imports: [
@@ -128,20 +129,7 @@ import { delayer } from './middlewares/delay-response.middleware';
         whitelist: true,
         transform: true,
         transformOptions: { enableImplicitConversion: true },
-        exceptionFactory: (validationErrors: ValidationError[] = []) => {
-          const errorMessages: string[] = [];
-
-          return new BadRequestException(
-            validationErrors
-              .reduce((arr, curr) => {
-                if (curr.constraints) {
-                  arr.push(Object.values(curr.constraints).join(', '));
-                }
-                return arr;
-              }, errorMessages)
-              .join('\n'),
-          );
-        },
+        exceptionFactory: validationErrorParse,
         // exceptionFactory: (errors) => {
         //   const error = !!errors[0].children.length
         //     ? errors[0].children[0].constraints
@@ -157,7 +145,7 @@ export class AppModule implements NestModule {
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(delayer(2000)).forRoutes('*');
+    // consumer.apply(delayer(2000)).forRoutes('*');
     // consumer
     //   .apply(
     //     express.static(join(process.cwd(), 'front-end'), {

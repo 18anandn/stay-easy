@@ -59,6 +59,13 @@ export class AuthService {
 
       const token = crypto.randomBytes(32).toString('hex');
 
+      if (
+        createUserDto.last_name !== undefined &&
+        createUserDto.last_name.length === 0
+      ) {
+        delete createUserDto.last_name;
+      }
+
       const newUser = await userRepo.save(
         userRepo.create({ ...createUserDto, verification_token: token }),
       );
@@ -280,10 +287,7 @@ export class AuthService {
       },
     });
     if (user) {
-      user.first_name = userDetails.first_name;
-      user.last_name = userDetails.last_name;
-      const newUser = await this.usersRepository.save(user);
-      return { id: newUser.id, email: newUser.email, role: newUser.role };
+      return { id: user.id, email: user.email, role: user.role };
     }
     const newUser = await this.usersRepository.save(
       this.usersRepository.create({ ...userDetails, verified: true }),

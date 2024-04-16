@@ -26,7 +26,6 @@ export const customFetch: CustomFetchFuntionType = async (
     
     const data = res.status === 204 ? null : await res.json();
     
-    console.log(data);
     if (!res.ok) {
       throw new Exception(data?.message ?? errorMessage, res.status);
     }
@@ -34,7 +33,6 @@ export const customFetch: CustomFetchFuntionType = async (
     const returnData = schema.parse(data);
     return returnData;
   } catch (error) {
-    console.log(error);
     if (error instanceof Exception) {
       throw error;
     }

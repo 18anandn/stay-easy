@@ -19,6 +19,10 @@ const StyledOAuth = styled.div`
     text-align: center;
   }
 
+  p {
+    white-space: pre-line;
+  }
+
   & > *:first-child {
     margin-top: auto;
   }
@@ -37,17 +41,18 @@ const parentWindow: Window | undefined | null = window.opener;
 const OAuthLoginComplete: React.FC = () => {
   const { authstatus } = useParams();
   const navigate = useNavigate();
+  const errorMessage = new URLSearchParams(window.location.search).get('error');
 
   useEffect(() => {
     if (parentWindow) {
       if (authstatus === 'success') {
         parentWindow.postMessage(AuthMessage.SUCCESS, '*');
+        window.setTimeout(() => {
+          window.close();
+        }, 1200);
       } else {
         parentWindow.postMessage(AuthMessage.FAILURE, '*');
       }
-      window.setTimeout(() => {
-        window.close();
-      }, 1500);
     } else {
       if (getSubdomain() === Subdomain.MAIN) {
         navigate('/', { replace: true });
@@ -66,12 +71,20 @@ const OAuthLoginComplete: React.FC = () => {
 
   return (
     <StyledOAuth>
-      <h1>
-        {authstatus === 'success'
-          ? 'Successfully authenticated'
-          : 'There was an error authenticating'}
-      </h1>
-      <Spinner />
+      {authstatus === 'success' ? (
+        <>
+          <h1>Successfully authenticated</h1> <Spinner />
+        </>
+      ) : (
+        <>
+          <h1>Authentication failed</h1>
+          <p>
+            {errorMessage && errorMessage.length > 0
+              ? errorMessage
+              : 'There was an unknown error while authentication'}
+          </p>
+        </>
+      )}
     </StyledOAuth>
   );
 };

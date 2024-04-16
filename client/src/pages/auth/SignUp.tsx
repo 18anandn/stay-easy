@@ -25,6 +25,7 @@ import { Subdomain, getSubdomain } from '../../utils/getSubdomain';
 import { useTitle } from '../../hooks/useTitle';
 import Spinner from '../../components/loaders/Spinner';
 import RedirectingBox from '../../components/loaders/RedirectingBox';
+import Asterisk from '../../components/Asterisk';
 
 const StyledSignUp = styled(StyledLogin)`
   .login-form {
@@ -38,8 +39,14 @@ const StyledSignUp = styled(StyledLogin)`
 
 const SignUp: React.FC = () => {
   const { isPending: isSigningUp, mutate: signUpUser } = useSignUpUser();
-  const { isLoading: isLoadingCurrentUser, refetch, isRefetching, isRefetchError, error, currentUser } =
-    useCurrentUser();
+  const {
+    isLoading: isLoadingCurrentUser,
+    refetch,
+    isRefetching,
+    isRefetchError,
+    error,
+    currentUser,
+  } = useCurrentUser();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirectTo');
   const navigate = useNavigate();
@@ -140,7 +147,11 @@ const SignUp: React.FC = () => {
       {isLoadingCurrentUser ? (
         <Spinner />
       ) : currentUser ? (
-        <>{getSubdomain() !== Subdomain.MAIN && <RedirectingBox text='Redirecting...' />}</>
+        <>
+          {getSubdomain() !== Subdomain.MAIN && (
+            <RedirectingBox text="Redirecting..." />
+          )}
+        </>
       ) : (
         <div className="box">
           <h1>{redirectUrl ? 'Sign up to continue' : 'Sign up'}</h1>
@@ -152,6 +163,7 @@ const SignUp: React.FC = () => {
                 ) : (
                   'First name'
                 )}
+                <Asterisk />
               </Label>
               <Input
                 type="text"
@@ -182,6 +194,7 @@ const SignUp: React.FC = () => {
                 ) : (
                   'Email'
                 )}
+                <Asterisk />
               </Label>
               <Input
                 type="text"
@@ -197,6 +210,7 @@ const SignUp: React.FC = () => {
                 ) : (
                   'Password'
                 )}
+                <Asterisk />
               </Label>
               <Input
                 type="password"
@@ -216,6 +230,7 @@ const SignUp: React.FC = () => {
                 ) : (
                   'Confirm Password'
                 )}
+                <Asterisk />
               </Label>
               <Input
                 type="password"

@@ -6,6 +6,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
   HttpStatus,
   Param,
   Post,
@@ -89,22 +90,28 @@ export class AuthController {
   @Get('/google/redirect')
   @GoogleOptionalAuthGuard()
   async handleGoogleRedirect(
-    @Req() req: any,
-    @Res() res: Response,
+    @Req() req: unknown,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    if (
-      typeof req === 'object' &&
-      req &&
-      'user' in req &&
-      req.user &&
-      'id' in req.user &&
-      req.user.id
-    ) {
-      await this.utilsService.attachTokenToCookies(res, {
-        id: req.user.id,
-      });
-      res.redirect('/login/success');
-      return;
+    if (typeof req === 'object' && req && 'user' in req && req.user) {
+      if (
+        typeof req.user === 'object' &&
+        'id' in req.user &&
+        typeof req.user.id === 'string'
+      ) {
+        await this.utilsService.attachTokenToCookies(res, {
+          id: req.user.id,
+        });
+        res.redirect('/login/success');
+        return;
+      } else {
+        if (req.user instanceof HttpException) {
+          const searchParam = new URLSearchParams();
+          searchParam.set('error', req.user.message);
+          res.redirect(`/login/failure?${searchParam.toString()}`);
+          return;
+        }
+      }
     }
     res.redirect('/login/failure');
   }

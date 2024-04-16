@@ -64,7 +64,7 @@ class RolesGuard implements CanActivate {
       }
 
       if (!this.matchRoles(allowedRoles, role)) {
-        throw new ForbiddenException('Unauthorized to access route');
+        throw new ForbiddenException('Unauthorized to access this route');
       }
 
       return true;

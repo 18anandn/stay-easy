@@ -208,7 +208,10 @@ export class OwnerService {
       .select('booking.id', 'id')
       .addSelect('booking.from_date', 'from_date')
       .addSelect('booking.to_date', 'to_date')
-      .addSelect("user.first_name || ' ' || user.last_name", 'user')
+      .addSelect(
+        "CASE WHEN last_name IS NULL THEN first_name ELSE CONCAT(first_name, ' ', last_name) END",
+        'user',
+      )
       .from('home_table', 'home_table')
       .leftJoin(Booking, 'booking', 'booking.home = home_table.id')
       .innerJoin('booking.user', 'user');

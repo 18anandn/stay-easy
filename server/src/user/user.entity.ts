@@ -24,13 +24,13 @@ export class User {
   @Column({ type: 'text', nullable: true })
   verification_token: string | null = null;
 
-  @Column({ type: 'varchar', length: 20, nullable: false })
+  @Column({ type: 'varchar', length: 30, nullable: false })
   first_name!: string;
 
-  @Column({ type: 'varchar', length: 20, nullable: false })
-  last_name!: string;
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  last_name: string | null = null;
 
-  @Column({ type: 'varchar', length: 30, nullable: false, unique: true })
+  @Column({ type: 'varchar', length: 50, nullable: false, unique: true })
   @Check("email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'")
   email!: string;
 
