@@ -118,7 +118,8 @@ const Filters: React.FC = () => {
   const { isLoading, isError, currentParams } = useSearchHomeList();
   const { register, setValue, watch, formState } =
     useFormContext<SearchHomeListParams>();
-  const filtersNum = watch('amenities').length;
+  const filters = watch('amenities');
+  const filtersNum = filters.length;
   const [isFiltersOpen, setIsFiltersOpen] = useFiltersModalStatus();
 
   const disableSearch = isLoading || !(formState.isDirty || isError);
@@ -163,6 +164,7 @@ const Filters: React.FC = () => {
                         id={val.value}
                         type="checkbox"
                         value={val.value}
+                        // checked={filters.includes(val.value)}
                         form="map-search"
                         {...register('amenities')}
                       />

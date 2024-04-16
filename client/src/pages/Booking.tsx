@@ -14,7 +14,7 @@ import { moneyFormatter } from '../utils/money-formatter';
 import { useCreateBooking } from '../features/booking/hooks/useCreateBooking';
 import { MouseEventHandler, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
-import LoaderOverlay from '../components/loaders/LoaderOverlay';
+import LoaderOverlay from '../components/loaders/SpinnerOverlay';
 import { dateRangeFormatter } from '../utils/dates/date-range-formatter';
 import { getFormattedLocation } from '../utils/location/format-location';
 import ErrorPage from './ErrorPage';

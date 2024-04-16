@@ -9,15 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Home } from '../home/home.entity';
 import { Repository, DataSource } from 'typeorm';
 import { UploadService } from '../upload/upload.service';
-import {
-  addMonths,
-  endOfYear,
-  format,
-  getDaysInMonth,
-  startOfMonth,
-  startOfYear,
-  subMonths,
-} from 'date-fns';
+import { endOfYear, format, startOfYear } from 'date-fns';
 import { DATE_FORMAT_NUM } from '../utility/date-funcs';
 import { BookingFilterDto } from './dtos/booking-filter.dto';
 import { BookingFilter } from './enums/BookingFilter';
@@ -84,13 +76,14 @@ export class OwnerService {
     const key = `owner-verified-home-data-${owner.id}-${id}`;
     let data: any = await this.cacheManager.get(key);
     if (!data) {
-      [data] = await this.dataSource.query(
+      const res: any[] = await this.dataSource.query(
         'SELECT * FROM get_verified_home_data($1::uuid, $2::uuid)',
         [id, owner.id],
       );
-      if (!data) {
-        throw new NotFoundException('No verified home with the given id');
+      if (!res || res.length === 0) {
+        throw new BadRequestException('No homes owned with the given id');
       }
+      [data] = res;
       this.cacheManager.set(key, data, 60000);
     }
 
@@ -110,15 +103,17 @@ export class OwnerService {
   }
 
   async getAnyHomeData(id: string, owner: CurrentUserDto) {
-    const [data] = await this.dataSource.query(
+    const res: any[] = await this.dataSource.query(
       'SELECT * FROM get_any_home_data($1::uuid, $2::uuid)',
       [id, owner.id],
     );
 
-    if (!data) {
+    if (!res || res.length === 0) {
       throw new NotFoundException('No home with the given id');
     }
 
+    const [data] = res;
+
     delete data.id;
     const { revenue, main_image, extra_images, location, ...rest } = data;
     const [lat, lng] = location.coordinates.reverse();
@@ -126,66 +121,6 @@ export class OwnerService {
     return {
       ...rest,
       location: { lat, lng },
-      images: [main_image, ...extra_images].map((object_key) =>
-        this.uploadService.getPresignedUrl(object_key),
-      ),
-    };
-  }
-
-  async getAnyHomeDetails(id: string, owner: CurrentUserDto) {
-    const getImagesQueryBuilder = this.homeRepository
-      .createQueryBuilder('home')
-      .select('array_agg(extra_images.object_key)', 'images')
-      .where('home.id = :homeId1', { homeId1: id })
-      .leftJoin('home.extra_images', 'extra_images')
-      .groupBy('home.id');
-
-    const getAmenitiesQueryBuilder = this.homeRepository
-      .createQueryBuilder('home')
-      .select('array_agg(amenities.name)', 'amenities')
-      .where('home.id = :homeId2', { homeId2: id })
-      .leftJoin('home.amenities', 'amenities')
-      .groupBy('home.id');
-
-    const queryBuilder = this.homeRepository
-      .createQueryBuilder('home')
-      .addCommonTableExpression(getImagesQueryBuilder, 'extra_images_table')
-      .addCommonTableExpression(getAmenitiesQueryBuilder, 'amenities_table')
-      .select('home.id', 'id')
-      .addSelect('home.name', 'name')
-      .addSelect('home.location', 'location')
-      .addSelect('home.city', 'city')
-      .addSelect('home.state', 'state')
-      .addSelect('home.country', 'country')
-      .addSelect('COALESCE(COUNT(booking.id), 0)', 'total_bookings')
-
-      .addSelect('home.address', 'address')
-      .addSelect('main_image.object_key', 'main_image')
-      .addSelect('extra_images_table.images', 'extra_images')
-      .addSelect('amenities_table.amenities', 'amenities')
-      .where('home.id = :homeId', { homeId: id })
-      .andWhere('user.id = :userId', { userId: owner.id })
-      .leftJoin('home.owner', 'user')
-      .leftJoin('home.bookings', 'booking')
-      .leftJoin('home.main_image', 'main_image')
-      .innerJoin('extra_images_table', 'extra_images_table', 'true')
-      .innerJoin('amenities_table', 'amenities_table', 'true')
-      .groupBy('home.id')
-      .addGroupBy('extra_images_table.images')
-      .addGroupBy('amenities_table.amenities')
-      .addGroupBy('main_image.object_key')
-      .cache(`owner-home-data-${owner.id}-${id}`, 60000);
-
-    const data = await queryBuilder.getRawOne();
-    delete data.id;
-    const { revenue, main_image, extra_images, location, ...rest } = data;
-    const [lat, lng] = location.coordinates.reverse();
-
-    return {
-      ...rest,
-      location: { lat, lng },
-      total_bookings: parseInt(data.total_bookings),
-      revenue: (parseFloat(revenue) * 95) / 100,
       images: [main_image, ...extra_images].map((object_key) =>
         this.uploadService.getPresignedUrl(object_key),
       ),
@@ -201,10 +136,16 @@ export class OwnerService {
     const start_date = format(startOfYear(date), DATE_FORMAT_NUM);
     const end_date = format(endOfYear(date), DATE_FORMAT_NUM);
 
-    const [data]: AnalyticsData[] = await this.homeRepository.query(
+    const res: any[] = await this.homeRepository.query(
       'SELECT * FROM get_month_booking_data($1::uuid, $2::uuid, $3::date, $4::date);',
       [id, owner.id, start_date, end_date],
     );
+
+    if (!res || res.length === 0) {
+      throw new BadRequestException('No homes owned with the given id');
+    }
+
+    const [data]: AnalyticsData[] = res;
 
     return {
       ...data,
@@ -332,7 +273,7 @@ export class OwnerService {
 
     const countQueryBuilder = this.dataSource
       .createQueryBuilder()
-      .select('COUNT(*)', 'count')
+      .select('COALESCE(COUNT(*), 0)', 'count')
       .from('booking_table', 'booking_table');
 
     const items_per_page = 10;
@@ -361,10 +302,14 @@ export class OwnerService {
       .addSelect('result_table.data', 'bookingList')
       .addSelect('count_table.count', 'count')
       .from('home_table', 'home_table')
-      .innerJoin('result_table', 'result_table', 'true')
-      .innerJoin('count_table', 'count_table', 'true');
+      .leftJoin('result_table', 'result_table', 'true')
+      .leftJoin('count_table', 'count_table', 'true');
 
     const data = await finalQueryBuilder.getRawOne();
+
+    if (!data) {
+      throw new BadRequestException('No homes owned with the given id');
+    }
     return { ...data, items_per_page };
   }
 }

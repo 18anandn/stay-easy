@@ -3,7 +3,7 @@ import { Auth } from './Auth';
 
 export const AuthWithBaseUrl = (
   <>
-    <Route index element={<Navigate to={'login'} />} />
+    <Route index element={<Navigate to={'login'} replace />} />
     {Auth}
   </>
 );

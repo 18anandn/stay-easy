@@ -22,21 +22,20 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     private readonly utilsService: UtilsService,
     private readonly authService: AuthService,
   ) {
+    const callbackURL = new URL(
+      configService.getOrThrow('GOOGLE_CLIENT_CALLBACK_PATH'),
+      utilsService.authURL,
+    ).toString();
     const options: StrategyOptions = {
       clientID: configService.getOrThrow('GOOGLE_CLIENT_ID'),
       clientSecret: configService.getOrThrow('GOOGLE_CLIENT_SECRET'),
-      callbackURL: new URL(
-        configService.getOrThrow('GOOGLE_CLIENT_CALLBACK_PATH'),
-        utilsService.mainURL,
-      ).toString(),
+      callbackURL,
       scope: ['profile', 'email'],
     };
     super(options);
   }
 
   async validate(accessToken: string, refreshToken: string, profile: Profile) {
-    // console.log(accessToken);
-    // console.log(refreshToken);
     const userDetails = new GoogleUserDetailsDto();
     userDetails.email = profile.emails![0].value;
     userDetails.first_name = profile.name!.givenName;

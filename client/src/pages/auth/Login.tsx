@@ -24,6 +24,9 @@ import {
 import { authWithGoogle } from '../../features/auth/utils/authWithGoogle';
 import { Exception } from '../../data/Exception';
 import { useTitle } from '../../hooks/useTitle';
+import { useQueryClient } from '@tanstack/react-query';
+import Spinner from '../../components/loaders/Spinner';
+import RedirectingBox from '../../components/loaders/RedirectingBox';
 
 export const StyledLogin = styled.div`
   padding: 20px var(--padding-inline);
@@ -83,9 +86,16 @@ export const StyledLogin = styled.div`
 `;
 
 function Login() {
+  const queryClient = useQueryClient();
   const { isLoggingIn, login } = useLoginUser();
-  const { currentUser, refetch, isRefetching, isRefetchError, error } =
-    useCurrentUser();
+  const {
+    isLoading: isLoadingCurrentUser,
+    currentUser,
+    refetch,
+    isRefetching,
+    isRefetchError,
+    error,
+  } = useCurrentUser();
   const {
     register,
     handleSubmit,
@@ -94,6 +104,7 @@ function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirectTo');
+  // console.log(redirectUrl);
 
   useTitle('StayEasy | Login');
 
@@ -122,10 +133,8 @@ function Login() {
       if (getSubdomain() === Subdomain.MAIN) {
         if (isRefetchedUser.current) {
           toast.success('Successfully logged in');
-          navigate(redirectUrl ?? '/', { replace: true });
-        } else {
-          navigate(-1);
         }
+        navigate(redirectUrl ?? '/', { replace: true });
       } else {
         let redirectPath = '/auth';
         if (isRefetchedUser.current) {
@@ -136,7 +145,7 @@ function Login() {
           }
           window.location.replace(redirectPath);
         } else {
-          window.history.back();
+          window.location.replace('/auth');
         }
       }
     }
@@ -150,9 +159,10 @@ function Login() {
 
   const onSubmit: SubmitHandler<Credentials> = (data) => {
     login(data, {
-      onSuccess: () => {
+      onSuccess: (userData) => {
         if (getSubdomain() === Subdomain.MAIN) {
           toast.success('Successfully logged in');
+          queryClient.setQueryData(['current-user'], userData);
           navigate(redirectUrl ?? '/', { replace: true });
           return;
         }
@@ -175,73 +185,83 @@ function Login() {
 
   return (
     <StyledLogin>
-      <div className="box">
-        <h1>{redirectUrl ? 'Login to continue' : 'Login'}</h1>
-        <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
-          <div className="form-row">
-            <Label>
-              {errors?.email?.message ? (
-                <ErrorMessage>{errors.email.message}</ErrorMessage>
-              ) : (
-                'Email'
-              )}
-            </Label>
-            <Input
-              type="text"
-              id="email"
-              defaultValue={'test@test.com'}
-              disabled={isBeingLoggedIn}
-              {...register('email')}
-            />
-          </div>
-          <div className="form-row">
-            <Label>
-              {errors?.password?.message ? (
-                <Error data={errors.password.message} />
-              ) : (
-                'Password'
-              )}
-            </Label>
-            <Input
-              type="password"
-              id="password"
-              defaultValue={'secret'}
-              disabled={isBeingLoggedIn}
-              {...register('password')}
-            />
-          </div>
-          <Link
-            className="reset-password"
-            to={{ pathname: '/reset-password' }}
-            replace={true}
-          >
-            Forgot password?
-          </Link>
-          <Button disabled={isBeingLoggedIn} type="submit">
-            <SpinnerWithText
-              isLoading={isBeingLoggedIn}
-              text="Login"
-              color="white"
-            />
-          </Button>
-          <GoogleSignInButton
-            disabled={isBeingLoggedIn}
-            process="Sign in"
-            type="button"
-            className="google-button"
-            onClick={authWithGoogle}
-          />
-          <p className="sign-up-link">
-            Don't have an account?{' '}
+      {isLoadingCurrentUser ? (
+        <Spinner />
+      ) : currentUser ? (
+        <>
+          {getSubdomain() !== Subdomain.MAIN && (
+            <RedirectingBox text="Redirecting..." />
+          )}
+        </>
+      ) : (
+        <div className="box">
+          <h1>{redirectUrl ? 'Login to continue' : 'Login'}</h1>
+          <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+            <div className="form-row">
+              <Label>
+                {errors?.email?.message ? (
+                  <ErrorMessage>{errors.email.message}</ErrorMessage>
+                ) : (
+                  'Email'
+                )}
+              </Label>
+              <Input
+                type="text"
+                id="email"
+                defaultValue={'test@test.com'}
+                disabled={isBeingLoggedIn}
+                {...register('email')}
+              />
+            </div>
+            <div className="form-row">
+              <Label>
+                {errors?.password?.message ? (
+                  <Error data={errors.password.message} />
+                ) : (
+                  'Password'
+                )}
+              </Label>
+              <Input
+                type="password"
+                id="password"
+                defaultValue={'secret'}
+                disabled={isBeingLoggedIn}
+                {...register('password')}
+              />
+            </div>
             <Link
-              to={{ pathname: '/signup', search: searchParams.toString() }}
+              className="reset-password"
+              to={{ pathname: '/reset-password' }}
               replace={true}
             >
-              Sign up
+              Forgot password?
             </Link>
-          </p>
-        </form>
-      </div>
+            <Button disabled={isBeingLoggedIn} type="submit">
+              <SpinnerWithText
+                isLoading={isBeingLoggedIn}
+                text="Login"
+                color="white"
+              />
+            </Button>
+            <GoogleSignInButton
+              disabled={isBeingLoggedIn}
+              process="Sign in"
+              type="button"
+              className="google-button"
+              onClick={authWithGoogle}
+            />
+            <p className="sign-up-link">
+              Don't have an account?{' '}
+              <Link
+                to={{ pathname: '/signup', search: searchParams.toString() }}
+                replace={true}
+              >
+                Sign up
+              </Link>
+            </p>
+          </form>
+        </div>
+      )}
     </StyledLogin>
   );
 }

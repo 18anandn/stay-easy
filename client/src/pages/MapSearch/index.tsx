@@ -7,10 +7,8 @@ import ToggleMapButton from './ToggleMapButton';
 import { useTitle } from '../../hooks/useTitle';
 
 const StyledMapSearch = styled.div`
-  --form-container-height: 70px;
+  --form-container-height: 4.3rem;
   --flex-gap: 20px;
-  height: 100%;
-  width: 100%;
   display: flex;
   flex-direction: column;
 

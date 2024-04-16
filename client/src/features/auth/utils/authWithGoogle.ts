@@ -2,7 +2,7 @@
 export const authWithGoogle = () => {
   const popupHeight = 600;
   const popupWidth = 600;
-  const popupUrl = '/api/v1/auth/google?state=sdvsdvsdbvsbv';
+  const popupUrl = '/api/v1/auth/google';
   window.open(
     popupUrl,
     '_blank',

@@ -23,6 +23,8 @@ import Label from '../../components/Label';
 import styled from 'styled-components';
 import { Subdomain, getSubdomain } from '../../utils/getSubdomain';
 import { useTitle } from '../../hooks/useTitle';
+import Spinner from '../../components/loaders/Spinner';
+import RedirectingBox from '../../components/loaders/RedirectingBox';
 
 const StyledSignUp = styled(StyledLogin)`
   .login-form {
@@ -36,7 +38,7 @@ const StyledSignUp = styled(StyledLogin)`
 
 const SignUp: React.FC = () => {
   const { isPending: isSigningUp, mutate: signUpUser } = useSignUpUser();
-  const { refetch, isRefetching, isRefetchError, error, currentUser } =
+  const { isLoading: isLoadingCurrentUser, refetch, isRefetching, isRefetchError, error, currentUser } =
     useCurrentUser();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirectTo');
@@ -48,13 +50,6 @@ const SignUp: React.FC = () => {
     trigger,
   } = useForm<SignUpInfo>({
     resolver: zodResolver(SignUpInfoSchema),
-    defaultValues: {
-      first_name: 'Sample',
-      last_name: 'User',
-      email: 'anand.nimbalkar.1999@gmail.com',
-      password: 'qwertyui',
-      confirm_password: 'qwertyui',
-    },
   });
   const isRefetchedUser = useRef(false);
 
@@ -68,10 +63,8 @@ const SignUp: React.FC = () => {
       if (getSubdomain() === Subdomain.MAIN) {
         if (isRefetchedUser.current) {
           toast.success('Successfully logged in');
-          navigate(redirectUrl ?? '/', { replace: true });
-        } else {
-          navigate(-1);
         }
+        navigate(redirectUrl ?? '/', { replace: true });
       } else {
         let redirectPath = '/auth';
         if (isRefetchedUser.current) {
@@ -82,7 +75,7 @@ const SignUp: React.FC = () => {
           }
           window.location.replace(redirectPath);
         } else {
-          window.history.back();
+          window.location.replace('/auth');
         }
       }
     }
@@ -91,8 +84,8 @@ const SignUp: React.FC = () => {
   useEffect(() => {
     const catchMessage = (event: MessageEvent) => {
       if (event.data === AuthMessage.SUCCESS) {
-        refetch();
         isRefetchedUser.current = true;
+        refetch();
       } else {
         toast.error('Signup failed');
       }
@@ -144,115 +137,121 @@ const SignUp: React.FC = () => {
 
   return (
     <StyledSignUp>
-      <div className="box">
-        <h1>{redirectUrl ? 'Sign up to continue' : 'Sign up'}</h1>
-        <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
-          <div className="form-row">
-            <Label>
-              {errors?.first_name?.message ? (
-                <ErrorMessage>{errors.first_name.message}</ErrorMessage>
-              ) : (
-                'First name'
-              )}
-            </Label>
-            <Input
-              type="text"
-              id="first_name"
+      {isLoadingCurrentUser ? (
+        <Spinner />
+      ) : currentUser ? (
+        <>{getSubdomain() !== Subdomain.MAIN && <RedirectingBox text='Redirecting...' />}</>
+      ) : (
+        <div className="box">
+          <h1>{redirectUrl ? 'Sign up to continue' : 'Sign up'}</h1>
+          <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+            <div className="form-row">
+              <Label>
+                {errors?.first_name?.message ? (
+                  <ErrorMessage>{errors.first_name.message}</ErrorMessage>
+                ) : (
+                  'First name'
+                )}
+              </Label>
+              <Input
+                type="text"
+                id="first_name"
+                disabled={isBeingSignedIn}
+                {...register('first_name')}
+              />
+            </div>
+            <div className="form-row">
+              <Label>
+                {errors?.last_name?.message ? (
+                  <ErrorMessage>{errors.last_name.message}</ErrorMessage>
+                ) : (
+                  'Last name'
+                )}
+              </Label>
+              <Input
+                type="text"
+                id="last_name"
+                disabled={isBeingSignedIn}
+                {...register('last_name')}
+              />
+            </div>
+            <div className="form-row">
+              <Label>
+                {errors?.email?.message ? (
+                  <ErrorMessage>{errors.email.message}</ErrorMessage>
+                ) : (
+                  'Email'
+                )}
+              </Label>
+              <Input
+                type="text"
+                id="email"
+                disabled={isBeingSignedIn}
+                {...register('email')}
+              />
+            </div>
+            <div className="form-row">
+              <Label>
+                {errors?.password?.message ? (
+                  <ErrorMessage>{errors.password.message}</ErrorMessage>
+                ) : (
+                  'Password'
+                )}
+              </Label>
+              <Input
+                type="password"
+                id="password"
+                disabled={isBeingSignedIn}
+                {...register('password', {
+                  onChange: () => {
+                    trigger('confirm_password');
+                  },
+                })}
+              />
+            </div>
+            <div className="form-row">
+              <Label>
+                {errors?.confirm_password?.message ? (
+                  <ErrorMessage>{errors.confirm_password.message}</ErrorMessage>
+                ) : (
+                  'Confirm Password'
+                )}
+              </Label>
+              <Input
+                type="password"
+                id="confirm_password"
+                disabled={isBeingSignedIn}
+                {...register('confirm_password', {
+                  onChange: () => trigger('confirm_password'),
+                })}
+              />
+            </div>
+            <Button disabled={isBeingSignedIn} type="submit">
+              <SpinnerWithText
+                isLoading={isBeingSignedIn}
+                text="Sign up"
+                color="white"
+              />
+            </Button>
+            <GoogleSignInButton
               disabled={isBeingSignedIn}
-              {...register('first_name')}
+              process="Sign up"
+              type="button"
+              className="google-button"
+              onClick={authWithGoogle}
             />
-          </div>
-          <div className="form-row">
-            <Label>
-              {errors?.last_name?.message ? (
-                <ErrorMessage>{errors.last_name.message}</ErrorMessage>
-              ) : (
-                'Last name'
-              )}
-            </Label>
-            <Input
-              type="text"
-              id="last_name"
-              disabled={isBeingSignedIn}
-              {...register('last_name')}
-            />
-          </div>
-          <div className="form-row">
-            <Label>
-              {errors?.email?.message ? (
-                <ErrorMessage>{errors.email.message}</ErrorMessage>
-              ) : (
-                'Email'
-              )}
-            </Label>
-            <Input
-              type="text"
-              id="email"
-              disabled={isBeingSignedIn}
-              {...register('email')}
-            />
-          </div>
-          <div className="form-row">
-            <Label>
-              {errors?.password?.message ? (
-                <ErrorMessage>{errors.password.message}</ErrorMessage>
-              ) : (
-                'Password'
-              )}
-            </Label>
-            <Input
-              type="password"
-              id="password"
-              disabled={isBeingSignedIn}
-              {...register('password', {
-                onChange: () => {
-                  trigger('confirm_password');
-                },
-              })}
-            />
-          </div>
-          <div className="form-row">
-            <Label>
-              {errors?.confirm_password?.message ? (
-                <ErrorMessage>{errors.confirm_password.message}</ErrorMessage>
-              ) : (
-                'Confirm Password'
-              )}
-            </Label>
-            <Input
-              type="password"
-              id="confirm_password"
-              disabled={isBeingSignedIn}
-              {...register('confirm_password', {
-                onChange: () => trigger('confirm_password'),
-              })}
-            />
-          </div>
-          <Button disabled={isBeingSignedIn} type="submit">
-            <SpinnerWithText
-              isLoading={isBeingSignedIn}
-              text="Sign up"
-              color="white"
-            />
-          </Button>
-          <GoogleSignInButton
-            disabled={isBeingSignedIn}
-            process="Sign up"
-            type="button"
-            className="google-button"
-            onClick={authWithGoogle}
-          />
-          <p className="sign-up-link">
-            Already have an account?{' '}
-            <Link
-              to={{ pathname: '/login', search: searchParams.toString() }}
-              replace={true}
-            >
-              Log in
-            </Link>
-          </p>
-        </form>
-      </div>
+            <p className="sign-up-link">
+              Already have an account?{' '}
+              <Link
+                to={{ pathname: '/login', search: searchParams.toString() }}
+                replace={true}
+              >
+                Log in
+              </Link>
+            </p>
+          </form>
+        </div>
+      )}
     </StyledSignUp>
   );
 };

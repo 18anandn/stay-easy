@@ -30,6 +30,7 @@ import { AllExceptionsFilter } from './exceptions-filters/all.exceptions-filter'
 import { NotFoundModule } from './not-found/not-found.module';
 import fs from 'fs';
 import path from 'path';
+import { delayer } from './middlewares/delay-response.middleware';
 
 @Module({
   imports: [
@@ -156,7 +157,7 @@ export class AppModule implements NestModule {
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(delayer(2000)).forRoutes('*');
+    consumer.apply(delayer(2000)).forRoutes('*');
     // consumer
     //   .apply(
     //     express.static(join(process.cwd(), 'front-end'), {

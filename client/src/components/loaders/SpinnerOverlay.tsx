@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import Loader from './Loader';
 import { createPortal } from 'react-dom';
+import Spinner from './Spinner';
 
 const Overlay = styled.div`
   position: fixed;
@@ -8,24 +8,25 @@ const Overlay = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.5);
-  font-size: 20vh;
+  font-size: 18vh;
 `;
 
-const LoaderOverlay: React.FC = () => {
+const SpinnerOverlay: React.FC = () => {
   return (
     <>
       {createPortal(
         <Overlay>
-          <Loader color='white'/>
+          <Spinner color="white" />
         </Overlay>,
-        document.getElementById('root') ?? document.body,
+        document.getElementById('root') ?? document.body
       )}
     </>
   );
 };
 
-export default LoaderOverlay;
+export default SpinnerOverlay;

@@ -90,7 +90,7 @@ export class AuthController {
   @GoogleOptionalAuthGuard()
   async handleGoogleRedirect(
     @Req() req: any,
-    @Res({ passthrough: true }) res: Response,
+    @Res() res: Response,
   ) {
     if (
       typeof req === 'object' &&

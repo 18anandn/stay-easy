@@ -9,6 +9,7 @@ import {
   SearchHomeListResSchema,
 } from '../types/SearchHomeListRes';
 import { customFetch } from '../../../utils/customFetch';
+import { whiteSpaceTrimmer } from '../../../utils/whiteSpaceTrimmer';
 
 export const toSearchHomeURLParams = ({
   address,
@@ -91,16 +92,12 @@ export const getFindHomeParams = (
   const max = max_str && latlngVerify(max_str) ? max_str : '';
   const amenities_str = searchParam.get('amenities');
   const amenities_temp = amenities_str
-    ? amenities_str
-        .replace(/\s+/g, ' ')
-        .trim()
+    ? whiteSpaceTrimmer(amenities_str)
         .split(',')
-        .map((val) => val.trim().toLowerCase())
+        .map((val) => whiteSpaceTrimmer(val))
     : undefined;
   const amenities = amenities_temp
-    ? AMENITIES_LIST.map((val) => val.toLowerCase())
-        .filter((val) => amenities_temp.includes(val))
-        .sort()
+    ? AMENITIES_LIST.filter((val) => amenities_temp.includes(val)).sort()
     : // .join(',')
       [];
   const sortBy = searchParam.get('sortBy') ?? '';

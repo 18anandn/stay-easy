@@ -16,15 +16,10 @@ import { useToggleMapValue } from './hooks/useToggleMap';
 const StyledHomeList = styled.div`
   --breakpoint-grid_columns: 2;
   --grid-padding: 80px;
-
-  flex: 0 1 auto;
+  flex-basis: 0 1 auto;
   height: 100%;
+  box-sizing: border-box;
   width: 100%;
-  /* width: 100%; */
-
-  /* @media (min-width: 550px) {
-        --breakpoint-grid_columns: 2;
-      } */
 
   &.map-close {
     --grid-padding: 5%;
@@ -47,7 +42,6 @@ const StyledHomeList = styled.div`
 
   &.map-open {
     flex: 1 1 auto;
-    height: 100%;
     max-width: 900px;
 
     --grid-padding: 30px;
@@ -116,7 +110,7 @@ const StyledHomeList = styled.div`
   }
 
   @media (max-width: ${screenWidths.tab}px) {
-    flex: 0 0 auto;
+    /* flex: 0 0 auto; */
 
     &.map-close,
     &.map-open {
@@ -140,9 +134,9 @@ const StyledHomeList = styled.div`
       --breakpoint-grid_columns: 1;
     }
 
-    .content-box {
+    /* .content-box {
       padding: 10px var(--grid-padding);
-    }
+    } */
   }
 `;
 
