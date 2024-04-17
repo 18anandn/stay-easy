@@ -9,6 +9,7 @@ import Spinner from '../components/loaders/Spinner';
 import { screenWidths } from '../providers/ScreenProvider';
 import toast from 'react-hot-toast';
 import { useTitle } from '../hooks/useTitle';
+import ErrorPage from './ErrorPage';
 
 const StyledExplore = styled.div`
   box-sizing: border-box;
@@ -69,48 +70,74 @@ const Explore: React.FC = () => {
     isFetchingNextPage,
     hasNextPage,
     error,
+    isError,
+    isLoadingError,
   } = useGetHomesList();
   const { containerRef, isVisible } = useObserver();
 
   useTitle('StayEasy | Explore');
 
   useEffect(() => {
-    if (!isFetching && !isFetchingNextPage && isVisible && hasNextPage) {
+    if (
+      !isError &&
+      !isFetching &&
+      !isFetchingNextPage &&
+      isVisible &&
+      hasNextPage
+    ) {
       fetchNextPage();
     }
-  }, [isVisible, isFetching, isFetchingNextPage, fetchNextPage, hasNextPage]);
+  }, [
+    isVisible,
+    isFetching,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    isError,
+  ]);
 
   useEffect(() => {
     if (error) {
-      toast.error(error.message);
+      toast.error(error.message, { id: 'throttle-error-home' });
     }
   }, [error]);
-  
+
   return (
     <StyledExplore>
-      {data && (
-        <ul className="home-list">
-          {data.pages.map((page, index) => (
-            <Fragment key={index}>
-              {page.homes.map((val) => (
-                <li key={val.id}>
-                  <HomeCard homeInfo={val} />
-                </li>
+      {isLoadingError ? (
+        <ErrorPage error={error} />
+      ) : (
+        <>
+          {data && (
+            <ul className="home-list">
+              {data.pages.map((page, index) => (
+                <Fragment key={index}>
+                  {page.homes.map((val) => (
+                    <li key={val.id}>
+                      <HomeCard homeInfo={val} />
+                    </li>
+                  ))}
+                </Fragment>
               ))}
-            </Fragment>
-          ))}
-        </ul>
+            </ul>
+          )}
+          {isFetching && !isFetchingNextPage && <Spinner color="black" />}
+          {isFetchingNextPage && (
+            <div className="next-page-loader">
+              <Spinner />
+            </div>
+          )}
+          <ObserverTarget
+            ref={containerRef}
+            show={
+              !isError &&
+              !isFetching &&
+              !isFetchingNextPage &&
+              hasNextPage === true
+            }
+          />
+        </>
       )}
-      {isFetching && !isFetchingNextPage && <Spinner color="black" />}
-      {isFetchingNextPage && (
-        <div className="next-page-loader">
-          <Spinner />
-        </div>
-      )}
-      <ObserverTarget
-        ref={containerRef}
-        show={!isFetching && !isFetchingNextPage && hasNextPage === true}
-      />
     </StyledExplore>
   );
 };

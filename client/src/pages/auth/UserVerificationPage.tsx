@@ -47,7 +47,8 @@ const UserVerificationPage: React.FC = () => {
     error,
   } = useVerifyUser(
     userId,
-    new URLSearchParams(window.location.search).get('token')
+    new URLSearchParams(window.location.search).get('token'),
+    { enabled: isLoadingCurrentUser || currentUser ? false : true }
   );
   const navigate = useNavigate();
 

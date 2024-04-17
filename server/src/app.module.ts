@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   MiddlewareConsumer,
   Module,
   NestModule,
@@ -8,7 +7,7 @@ import {
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -25,19 +24,13 @@ import { RedisClientOptions } from 'redis';
 import { redisStore } from 'cache-manager-redis-yet';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { ValidationError } from 'class-validator';
 import { AllExceptionsFilter } from './exceptions-filters/all.exceptions-filter';
 import { NotFoundModule } from './not-found/not-found.module';
-import fs from 'fs';
-import path from 'path';
 import { delayer } from './middlewares/delay-response.middleware';
 import { validationErrorParse } from './utility/validationErrorParse';
 
 @Module({
   imports: [
-    // ServeStaticModule.forRoot({
-    //   rootPath: join(__dirname, '..', 'front-end'),
-    // }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV === 'dev' ? 'dev' : 'prod'}`,
@@ -145,7 +138,7 @@ export class AppModule implements NestModule {
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(delayer(2000)).forRoutes('*');
+    consumer.apply(delayer(3000)).forRoutes('*');
     // consumer
     //   .apply(
     //     express.static(join(process.cwd(), 'front-end'), {

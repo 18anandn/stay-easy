@@ -47,7 +47,7 @@ export class AuthService {
     try {
       const userRepo = queryRunner.manager.getRepository(User);
       const user = await userRepo.findOne({
-        where: { email: createUserDto.email },
+        where: { email: createUserDto.email, verified: true },
       });
       if (user) {
         throw new BadRequestException('Email is already in use');

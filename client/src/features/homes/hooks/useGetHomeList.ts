@@ -12,6 +12,7 @@ const useGetHotels = () =>
         : undefined;
     },
     staleTime: Infinity,
+    retryOnMount: true,
   });
 
 export default useGetHotels;

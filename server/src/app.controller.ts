@@ -26,34 +26,6 @@ export class AppController {
   //   response.sendFile('index.html', { root: join(process.cwd(), 'front-end') });
   // }
 
-  @Get('/auth')
-  async redirectToAuthPage(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Query('redirectTo') redirectTo: string | undefined,
-  ) {
-    let redirectUrl = new URL(this.utilsService.authURL + '/login');
-    const user = await this.authService.getUserFromCookie(req, res);
-    if (!user) {
-      if (redirectTo) {
-        redirectUrl.searchParams.set('redirectTo', redirectTo);
-      }
-      res
-        .status(HttpStatus.TEMPORARY_REDIRECT)
-        .redirect(redirectUrl.toString());
-      return;
-    }
-    if (redirectTo && URL.canParse(redirectTo)) {
-      redirectUrl = new URL(redirectTo);
-      if (!redirectUrl.hostname.endsWith(this.utilsService.domain_name)) {
-        redirectUrl = new URL(this.utilsService.mainURL);
-      }
-    } else {
-      redirectUrl = new URL(this.utilsService.mainURL);
-    }
-    res.status(HttpStatus.PERMANENT_REDIRECT).redirect(redirectUrl.toString());
-  }
-
   @Get('/logout')
   logoutUser(@Res() res: Response) {
     this.utilsService.removeTokenFromCookes(res);

@@ -2,11 +2,9 @@ import { AuthService } from './auth.service';
 import { UtilsService } from '../utils/utils.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
-  HttpException,
   HttpStatus,
   Param,
   Post,
@@ -17,11 +15,6 @@ import {
 import { Request, Response } from 'express';
 import { LocalAuthGuard } from './guards/local.authguard';
 import { assertHasUser } from './assertHasUser';
-import {
-  GoogleAuthGuard,
-  GoogleOptionalAuthGuard,
-} from './guards/google.authguard';
-import { isLatLong, isNumber } from 'class-validator';
 import { UserIdDto } from './dtos/user-id.dto';
 import { VerificationTokenDto } from './dtos/verification-token.dto';
 import { HandleForgetPasswordDto } from './dtos/handle-forget-password.dto';
@@ -81,39 +74,6 @@ export class AuthController {
     @Body() newPassword: ResetPasswordDto,
   ) {
     return this.authService.handleResetUserPassword(userId, token, newPassword);
-  }
-
-  @Get('/google')
-  @GoogleAuthGuard()
-  handleGoogleAuth() {}
-
-  @Get('/google/redirect')
-  @GoogleOptionalAuthGuard()
-  async handleGoogleRedirect(
-    @Req() req: unknown,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    if (typeof req === 'object' && req && 'user' in req && req.user) {
-      if (
-        typeof req.user === 'object' &&
-        'id' in req.user &&
-        typeof req.user.id === 'string'
-      ) {
-        await this.utilsService.attachTokenToCookies(res, {
-          id: req.user.id,
-        });
-        res.redirect('/login/success');
-        return;
-      } else {
-        if (req.user instanceof HttpException) {
-          const searchParam = new URLSearchParams();
-          searchParam.set('error', req.user.message);
-          res.redirect(`/login/failure?${searchParam.toString()}`);
-          return;
-        }
-      }
-    }
-    res.redirect('/login/failure');
   }
 
   @Get('/logout')
