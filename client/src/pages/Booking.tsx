@@ -360,8 +360,14 @@ const Booking: React.FC = () => {
           <div className="confirm-booking">
             <p>
               By clicking the following button, you agree to our{' '}
-              <Link to="/privacy">privacy</Link> and{' '}
-              <Link to="/terms">terms</Link>.
+              <Link to="/privacy" target="_blank">
+                privacy
+              </Link>{' '}
+              and{' '}
+              <Link to="/terms" target="_blank">
+                terms
+              </Link>
+              .
             </p>
             <Button onClick={onBookingRequest}>Confirm Booking</Button>
             <p>Clicking the above button will immediately book the home.</p>

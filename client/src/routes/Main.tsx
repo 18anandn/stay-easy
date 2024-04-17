@@ -37,14 +37,7 @@ const MainRoute = (
       <Route path="trips" element={<TripsList />} />
       <Route path="trip/:tripId" element={<Trip />} />
     </Route>
-    <Route
-      path="search"
-      element={
-        <ProtectedRoutes>
-          <MapSearch />
-        </ProtectedRoutes>
-      }
-    />
+    <Route path="search" element={<MapSearch />} />
   </Route>
 );
 export default MainRoute;

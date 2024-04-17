@@ -101,6 +101,7 @@ const StyledCreateHotel = styled.div`
 const GridLayout = styled.div`
   display: grid;
   grid-template-columns: 1fr 1.5fr;
+
 `;
 
 type GridCellProps = {
@@ -165,6 +166,7 @@ const GridCell = styled.div.attrs({ className: 'grid-cell' })<GridCellProps>`
 
 const StyledAmenities = styled.div`
   background-color: white;
+  max-width: 90svw;
   max-height: 90svh;
   display: flex;
   flex-direction: column;
@@ -212,7 +214,6 @@ const StyledAmenities = styled.div`
 
       .list {
         display: grid;
-        /* grid-template-columns: min-content min-content; */
         grid-template-columns: repeat(2, minmax(min-content, 1fr));
         gap: 20px;
 

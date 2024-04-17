@@ -7,7 +7,9 @@ import { useLayoutEffect } from 'react';
 
 const StyledOwnerHomeLayout = styled.div`
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: min-content minmax(0, 1fr);
+  min-width: 100%;
+  max-width: min-content;
 
   & > .content {
     padding: 2rem 5%;
@@ -17,18 +19,18 @@ const StyledOwnerHomeLayout = styled.div`
 
     .home-name {
       flex: 0 0 auto;
+      overflow-wrap: break-word;
     }
 
     .outlet {
       flex: 1 0 auto;
       display: grid;
-      /* grid-template-columns: 100%; */
     }
   }
 
   @media (max-width: ${screenWidths.tab}px) {
     display: grid;
-    grid-template-columns: unset;
+    grid-template-columns: minmax(0, 1fr);
 
     & > .content {
       padding-inline: 8%;

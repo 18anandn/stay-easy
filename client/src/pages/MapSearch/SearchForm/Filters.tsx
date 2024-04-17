@@ -40,6 +40,7 @@ const FilterButton = styled(Button)`
 const StyledFilters = styled.div`
   /* padding: 1vh 1vw; */
   max-height: 90svh;
+  max-width: 90svw;
   /* overflow: hidden; */
   background-color: white;
   display: flex;

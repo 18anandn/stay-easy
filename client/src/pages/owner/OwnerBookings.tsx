@@ -17,16 +17,9 @@ import { screenWidths } from '../../providers/ScreenProvider';
 import { useTitle } from '../../hooks/useTitle';
 
 const StyledOwnerBookings = styled.div`
-  /* display: flex;
+  display: flex;
   flex-direction: column;
-  align-items: stretch; */
-  gap: 2rem;
   position: relative;
-  /* max-width: 100%; */
-  display: grid;
-  grid-template-columns: 100%;
-  grid-auto-rows: min-content;
-  align-items: start;
   grid-auto-flow: row;
   gap: 2rem;
 
@@ -119,8 +112,7 @@ const StyledOwnerBookings = styled.div`
 
       td:nth-child(2) {
         max-width: 9rem;
-        hyphens: auto;
-        /* word-break: break-all; */
+        overflow-wrap: break-word;
       }
 
       td:nth-child(3),
@@ -168,21 +160,22 @@ const StyledOwnerBookings = styled.div`
           display: none;
         }
 
-        tr {
-          padding: 1rem 0.5rem;
-        }
-
         td {
-          /* word-break: break-all; */
+          overflow-wrap: break-word;
           padding: 0;
           padding-block: 0.2rem;
           display: grid;
-          grid-template-columns: 13ch auto;
+          grid-template-columns: 13ch minmax(0, 1fr);
           font-family: 'Open Sans', sans-serif;
           border: none;
+
+          & > *:last-child {
+            overflow: hidden;
+          }
         }
 
         td::before {
+          display: inline;
           content: attr(data-cell) ': ';
           text-transform: capitalize;
         }
@@ -192,8 +185,6 @@ const StyledOwnerBookings = styled.div`
         }
 
         td:nth-child(2) {
-          /* height: 3rem; */
-          /* hyphens: auto; */
           max-width: unset;
         }
 

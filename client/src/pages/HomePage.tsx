@@ -35,10 +35,10 @@ const StyledHome = styled.div`
   }
 
   @media (max-width: ${screenWidths.phone}px) {
-    grid-template-rows: 1fr 200px;
+    grid-template-rows: 1fr 300px;
 
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
     }
   }
 `;
@@ -47,7 +47,7 @@ const HomePage: React.FC = () => {
   return (
     <StyledHome>
       <h1>
-        Book rooms, cabins, hostels.
+        Book homes, rooms, hostels.
         <br />
         Anytime! Anywhere!
       </h1>

@@ -13,8 +13,8 @@ const StyledHomeInfo = styled.div`
   padding-block: 2rem;
   padding-inline: var(--padding-inline);
   display: grid;
-  grid-template-columns: 1fr min-content;
-  gap: 1rem 8%;
+  grid-template-columns: minmax(0, 1fr) min-content;
+  gap: 1rem 6%;
 
   .custom-loader {
     font-size: 0.1rem;
@@ -23,12 +23,10 @@ const StyledHomeInfo = styled.div`
   h1 {
     font-size: 2rem;
     grid-column: 1 / -1;
-    word-wrap: break-word;
-    /* hyphens: auto; */
   }
 
   .home-name {
-    /* padding-inline: var(--padding-inline); */
+    word-wrap: break-word;
   }
 
   h2 {
@@ -40,6 +38,7 @@ const StyledHomeInfo = styled.div`
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: hidden;
 
     .location {
       font-size: 1.5rem;
@@ -78,14 +77,13 @@ const StyledHomeInfo = styled.div`
 
   @media (max-width: ${screenWidths.phone}px) {
     padding-top: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    /* display: flex;
+    flex-direction: column; */
     gap: 1rem;
     padding-inline: 0;
-
-    .home-name {
-      word-break: break-all;
-    }
+    /* overflow: hidden; */
 
     .home-name,
     .left-column {

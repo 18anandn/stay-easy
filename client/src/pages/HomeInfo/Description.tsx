@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getRemInPixels } from '../../utils/getRemInPixels';
 
 const StyledDescription = styled.div`
+  /* max-width: 100%; */
   .show-more-button {
     display: none;
   }
@@ -15,12 +16,11 @@ const StyledDescription = styled.div`
 
   .text {
     font-size: 1rem;
-    /* background-color: blue; */
 
     p {
       word-wrap: break-word;
-      word-break: break-all;
-      hyphens: auto;
+      /* word-break: break-all; */
+      /* hyphens: auto; */
     }
   }
 
@@ -127,7 +127,6 @@ const Description: React.FC<DataProps> = ({ data }) => {
       <div className="text-container" ref={containerRef}>
         <div className="text">
           <p ref={paragraphRef}>{data.description}</p>
-          {/* dsvcsdvjbskvjbskdvnjs */}
         </div>
       </div>
       {isHidingFeatureOn && (

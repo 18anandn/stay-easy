@@ -9,7 +9,6 @@ import ResetScrollOnPathChange from '../components/ResetScrollOnPathChange';
 const StyledMain = styled.main`
   min-height: 100svh;
   display: grid;
-  /* grid-template-columns: 100%; */
 
   .custom-loader {
     font-size: 0.1rem;

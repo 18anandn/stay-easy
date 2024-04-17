@@ -148,7 +148,7 @@ export class AppModule implements NestModule {
     //   .forRoutes('*');
     // consumer.apply(ServeStaticMiddleware).forRoutes('*');
     consumer
-      .apply(cookieParser(this.configService.get('JWT_SECRET')))
+      .apply(cookieParser(this.configService.getOrThrow('JWT_SECRET')))
       .forRoutes('*');
   }
 }

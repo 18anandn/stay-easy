@@ -25,7 +25,7 @@ const StyledDetails = styled.div`
     box-sizing: border-box;
     /* width: 100%; */
     /* padding: 2rem 2rem; */
-    padding: 20px;
+    padding: 20px 30px;
     position: sticky;
     top: calc(var(--top-navbar-height) + 10px);
     display: flex;
@@ -43,7 +43,7 @@ const StyledDetails = styled.div`
   }
 
   .custom-date-picker {
-    width: 17rem;
+    width: 18rem;
     margin: auto;
   }
 
@@ -65,6 +65,8 @@ const StyledDetails = styled.div`
   }
 
   @media (max-width: ${screenWidths.phone}px) {
+    max-width: 95svw;
+
     .custom-date-picker {
       width: auto;
       margin: auto;
