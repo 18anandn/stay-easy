@@ -24,10 +24,11 @@ export class UtilsService {
     private configService: ConfigService,
   ) {
     this.domain_name = this.configService.getOrThrow('DOMAIN');
-    this.mainURL = `http://www.${this.domain_name}`;
-    this.authURL = `http://auth.${this.domain_name}`;
-    this.adminURL = `http://admin.${this.domain_name}`;
-    this.ownerURL = `http://owner.${this.domain_name}`;
+    const protocol = configService.get('NODE_ENV') === 'dev' ? 'http' : 'https';
+    this.mainURL = `${protocol}://www.${this.domain_name}`;
+    this.authURL = `${protocol}://auth.${this.domain_name}`;
+    this.adminURL = `${protocol}://admin.${this.domain_name}`;
+    this.ownerURL = `${protocol}://owner.${this.domain_name}`;
   }
 
   createJwt(payload: Object) {
