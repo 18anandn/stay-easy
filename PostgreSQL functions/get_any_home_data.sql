@@ -1,4 +1,3 @@
-
 CREATE OR REPLACE FUNCTION public.get_any_home_data(
 	home_id uuid,
 	user_id uuid)

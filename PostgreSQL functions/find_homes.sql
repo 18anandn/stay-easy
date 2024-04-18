@@ -1,7 +1,3 @@
--- FUNCTION: public.find_homes(character varying, character varying, numeric, character varying, character varying, character varying, integer, integer, character varying)
-
--- DROP FUNCTION IF EXISTS public.find_homes(character varying, character varying, numeric, character varying, character varying, character varying, integer, integer, character varying);
-
 CREATE OR REPLACE FUNCTION public.find_homes(
 	bounding_box_str character varying DEFAULT NULL::character varying,
 	lng_lat_str character varying DEFAULT NULL::character varying,
@@ -99,7 +95,7 @@ BEGIN
 				AND (
 					book_from_str IS NULL
 					OR (
-						date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE h.time_zone) < book_from
+						CURRENT_TIMESTAMP AT TIME ZONE h.time_zone < book_from AT TIME ZONE h.time_zone
 						AND EXISTS (
 							SELECT 1
 							FROM public.cabin c

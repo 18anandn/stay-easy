@@ -1,13 +1,9 @@
--- FUNCTION: public.generate_booking_id()
-
--- DROP FUNCTION IF EXISTS public.generate_booking_id();
-
 CREATE OR REPLACE FUNCTION public.generate_booking_id(
 	)
     RETURNS character varying
     LANGUAGE 'plpgsql'
     COST 100
-    VOLATILE PARALLEL SAFE
+    VOLATILE PARALLEL SAFE 
 AS $BODY$
 DECLARE
     letters VARCHAR[] := ARRAY['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
@@ -39,6 +35,3 @@ BEGIN
     RETURN booking_id;
 END;
 $BODY$;
-
-ALTER FUNCTION public.generate_booking_id()
-    OWNER TO anand;

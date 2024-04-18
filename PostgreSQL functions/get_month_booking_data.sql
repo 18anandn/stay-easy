@@ -1,13 +1,9 @@
--- FUNCTION: public.get_month_booking_data(uuid, uuid, date, date)
-
-DROP FUNCTION IF EXISTS public.get_month_booking_data(uuid, uuid, date, date);
-
 CREATE OR REPLACE FUNCTION public.get_month_booking_data(
 	home_id uuid,
 	user_id uuid,
 	start_date date,
 	end_date date)
-    RETURNS TABLE(id uuid, name character varying, guests json, stay json, occupancy json) 
+    RETURNS TABLE(id uuid, name character varying, number_of_cabins smallint, number_of_bookings bigint, month_data json, by_month_stats json, by_booking_stats json) 
     LANGUAGE 'plpgsql'
     COST 100
     VOLATILE PARALLEL SAFE 
@@ -35,82 +31,131 @@ BEGIN
 				booking.guests AS guests
 			FROM
 				home_table
-			LEFT JOIN
+			INNER JOIN
 				booking ON booking.home_id = home_table.id AND (booking.from_date <= end_date AND booking.to_date > start_date)
 		),
-		occupancy_table AS (
-			SELECT 
-				start_of_month.month AS month,
-				COALESCE(
-					SUM(
-						LEAST(booking_table.to_date, (month + INTERVAL '1 month')::date) - GREATEST(booking_table.from_date, month)
-					),
-					0
-				) AS occupied_days,
-				COALESCE(
-					SUM(
-						(LEAST(booking_table.to_date, (month + INTERVAL '1 month')::date) - GREATEST(booking_table.from_date, month))::numeric
-						* booking_table.paid / (booking_table.to_date - booking_table.from_date)
-					),
-					0
-				) AS payment,
-				COALESCE(SUM(booking_table.guests),0) AS guests
-			FROM
-				booking_table,
-				LATERAL (
-					SELECT
-						start_of_month::date AS month
-					FROM generate_series(
-						date_trunc('month', booking_table.from_date),
-						date_trunc('month', booking_table.to_date - INTERVAL '1 day'),
-						INTERVAL '1 month'
-					) start_of_month
-				) start_of_month
-			GROUP BY month
-		),
-		guests_table AS (
+		month_table AS (
 			SELECT
-				MIN(booking_table.guests) AS min,
-				AVG(booking_table.guests) AS avg,
-				MAX(booking_table.guests) AS max
+				start_of_month::date AS start,
+				(start_of_month + INTERVAL '1 month' - INTERVAL '1 day')::date AS end
+			FROM generate_series(
+				date_trunc('month', start_date),
+				date_trunc('month', end_date),
+				INTERVAL '1 month'
+			) start_of_month
+		),
+		by_month_data AS (
+			SELECT 
+				month_table.start AS month,
+				COALESCE(
+					SUM(
+						CASE
+							WHEN booking_table.from_date IS NULL THEN NULL
+							ELSE LEAST(booking_table.to_date, (month_table.start + INTERVAL '1 month')::date) - GREATEST(booking_table.from_date, month_table.start)
+						END
+					),
+					0
+				) AS occupancy,
+				COALESCE(
+					SUM(
+						CASE
+							WHEN booking_table.from_date IS NULL THEN NULL
+							ELSE (LEAST(booking_table.to_date, (month_table.start + INTERVAL '1 month')::date) - GREATEST(booking_table.from_date, month_table.start))::numeric * booking_table.paid / (booking_table.to_date - booking_table.from_date)
+						END
+					),
+					0
+				) AS revenue,
+				COALESCE(SUM(booking_table.guests), 0) AS guests
+			FROM
+				month_table
+			LEFT JOIN booking_table ON booking_table.from_date <= month_table.end AND booking_table.to_date > month_table.start
+			GROUP BY month_table.start
+		),
+		occupancy_by_month AS (
+			SELECT
+				COALESCE(MIN(by_month_data.occupancy), 0) AS min,
+				COALESCE(AVG(by_month_data.occupancy), 0) AS avg,
+				COALESCE(MAX(by_month_data.occupancy), 0) AS max
+			FROM
+				by_month_data
+		),
+		revenue_by_month AS (
+			SELECT
+				COALESCE(MIN(by_month_data.revenue), 0) AS min,
+				COALESCE(AVG(by_month_data.revenue), 0) AS avg,
+				COALESCE(MAX(by_month_data.revenue), 0) AS max
+			FROM
+				by_month_data
+		),
+		guests_by_month AS (
+			SELECT
+				COALESCE(MIN(by_month_data.guests), 0) AS min,
+				COALESCE(AVG(by_month_data.guests), 0) AS avg,
+				COALESCE(MAX(by_month_data.guests), 0) AS max
+			FROM
+				by_month_data
+		),
+		occupancy_by_booking AS (
+			SELECT
+				COALESCE(MIN(LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date)), 0) AS min,
+				COALESCE(AVG(LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date)), 0) AS avg,
+				COALESCE(MAX(LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date)), 0) AS max,
+				COALESCE(SUM(LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date)), 0) AS total
 			FROM
 				booking_table
 		),
-		stay_table AS (
+		revenue_by_booking AS (
 			SELECT
-				MIN(LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date)) AS min,
-				AVG(LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date)) AS avg,
-				MAX(LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date)) AS max
+				COALESCE(MIN((LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date))::numeric * booking_table.paid / (booking_table.to_date - booking_table.from_date)), 0) AS min,
+				COALESCE(AVG((LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date))::numeric * booking_table.paid / (booking_table.to_date - booking_table.from_date)), 0) AS avg,
+				COALESCE(MAX((LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date))::numeric * booking_table.paid / (booking_table.to_date - booking_table.from_date)), 0) AS max,
+				COALESCE(SUM((LEAST(booking_table.to_date, end_date) - GREATEST(booking_table.from_date, start_date))::numeric * booking_table.paid / (booking_table.to_date - booking_table.from_date)), 0) AS total
+			FROM
+				booking_table
+		),
+		guests_by_booking AS (
+			SELECT
+				COALESCE(MIN(booking_table.guests), 0) AS min,
+				COALESCE(AVG(booking_table.guests), 0) AS avg,
+				COALESCE(MAX(booking_table.guests), 0) AS max,
+				COALESCE(SUM(booking_table.guests), 0) AS total
+			FROM
+				booking_table
+		),
+		count_table AS (
+			SELECT
+				COALESCE(COUNT(*), 0) AS count
 			FROM
 				booking_table
 		)
 		SELECT
 			home_table.*,
-			guests.guests,
-			stay.stay,
-			occupancy.occupancy
+			count_table.count AS number_of_bookings,
+			by_month_data.data,
+			json_build_object(
+				'occupancy', to_json(occupancy_by_month),
+				'revenue', to_json(revenue_by_month),
+				'guests', to_json(guests_by_month)
+			) AS by_month_stats,
+			json_build_object(
+				'occupancy', to_json(occupancy_by_booking),
+				'revenue', to_json(revenue_by_booking),
+				'guests', to_json(guests_by_booking)
+			) AS by_booking_stats
 		FROM
 			home_table
 		JOIN (
 			SELECT
-				json_agg(occupancy_table) AS occupancy
+				json_agg(by_month_data ORDER BY month) AS data
 			FROM
-				occupancy_table
-		) occupancy ON true
-		JOIN (
-			SELECT
-				to_json(guests_table) guests
-			FROM
-				guests_table
-		) guests ON true
-		JOIN (
-			SELECT
-				to_json(stay_table) stay
-			FROM
-				stay_table
-		) stay ON true;
+				by_month_data
+		) by_month_data ON true
+		JOIN occupancy_by_month ON true
+		JOIN revenue_by_month ON true
+		JOIN guests_by_month ON true
+		JOIN occupancy_by_booking ON true
+		JOIN revenue_by_booking ON true
+		JOIN guests_by_booking ON true
+		JOIN count_table ON true;
 END;
 $BODY$;
-
-ALTER FUNCTION public.get_month_booking_data(uuid, uuid, date, date)
-    OWNER TO postgres;

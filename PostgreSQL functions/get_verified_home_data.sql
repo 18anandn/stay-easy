@@ -1,14 +1,12 @@
-
-DROP FUNCTION get_verified_home_data(uuid,uuid);
-
 CREATE OR REPLACE FUNCTION public.get_verified_home_data(
 	home_id uuid,
 	user_id uuid)
-    RETURNS TABLE(id uuid, name character varying, location json, city character varying, state character varying, country character varying, address text, number_of_cabins smallint, cabin_capacity smallint, main_image character varying, extra_images character varying[], amenities character varying[], revenue numeric, total_bookings bigint)
+    RETURNS TABLE(id uuid, name character varying, location json, city character varying, state character varying, country character varying, address text, number_of_cabins smallint, cabin_capacity smallint, main_image character varying, extra_images character varying[], amenities character varying[], revenue numeric, total_bookings bigint) 
     LANGUAGE 'plpgsql'
     COST 100
     VOLATILE PARALLEL SAFE 
     ROWS 1
+
 AS $BODY$
 BEGIN
 	RETURN QUERY
