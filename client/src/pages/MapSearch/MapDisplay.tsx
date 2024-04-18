@@ -138,6 +138,7 @@ const MapDisplay: React.FC = () => {
           trackResize={true}
           maxBoundsViscosity={1}
           doubleClickZoom={false}
+          dragging={true}
           maxBounds={[
             [-90, -180],
             [90, 180],
