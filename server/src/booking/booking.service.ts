@@ -30,6 +30,9 @@ export class BookingService {
     { homeId, from_date, to_date, guests }: CreateBookingDto,
     user: CurrentUserDto,
   ) {
+    if (user.email === 'johndoe@test.com') {
+      throw new BadRequestException('Cannot book with test account');
+    }
     const numDays = differenceInDays(to_date, from_date);
     if (numDays < 1) {
       throw new BadRequestException('Invalid date range');
@@ -42,7 +45,7 @@ export class BookingService {
     }
 
     let maxBookings = 20;
-    if (user.email.endsWith('@test.com') && user.email !== 'johndoe@test.com') {
+    if (user.email.endsWith('@test.com')) {
       maxBookings = 1000;
     }
 

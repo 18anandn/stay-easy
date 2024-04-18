@@ -259,6 +259,10 @@ const Booking: React.FC = () => {
   const total_price = nights * price_per_night;
 
   const onBookingRequest: MouseEventHandler = () => {
+    if (currentUser && currentUser.email === 'johndoe@test.com') {
+      toast.error('Cannot book with test account');
+      return;
+    }
     bookingFn(
       {
         homeId,
