@@ -208,7 +208,7 @@ function Login() {
               <Input
                 type="text"
                 id="email"
-                defaultValue={'test@test.com'}
+                defaultValue='johndoe@test.com'
                 disabled={isBeingLoggedIn}
                 {...register('email')}
               />
@@ -224,7 +224,7 @@ function Login() {
               <Input
                 type="password"
                 id="password"
-                defaultValue={'secret'}
+                defaultValue='secret'
                 disabled={isBeingLoggedIn}
                 {...register('password')}
               />

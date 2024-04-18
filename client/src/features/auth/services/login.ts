@@ -5,6 +5,7 @@ import { UserRole } from '../enums/UserRole.enum';
 
 const LoginResSchema = z.object({
   id: z.string().uuid(),
+  email: z.string().email(),
   role: z.nativeEnum(UserRole),
 });
 

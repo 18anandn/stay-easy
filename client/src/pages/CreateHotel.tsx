@@ -14,7 +14,7 @@ import InputCounter from '../components/inputs/InputCounter';
 import FileInput from '../components/inputs/FileInput';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../components/buttons/Button';
-import { ChangeEventHandler, useState } from 'react';
+import { ChangeEventHandler, useEffect, useState } from 'react';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Spinner from '../components/loaders/Spinner';
@@ -36,6 +36,7 @@ import {
 import { Exception } from '../data/Exception';
 import { useQueryClient } from '@tanstack/react-query';
 import { UserRole } from '../features/auth/enums/UserRole.enum';
+import { useCurrentUser } from '../features/auth/hooks/useCurrentUser';
 
 const StyledCreateHotel = styled.div`
   padding: 50px 5%;
@@ -101,7 +102,6 @@ const StyledCreateHotel = styled.div`
 const GridLayout = styled.div`
   display: grid;
   grid-template-columns: 1fr 1.5fr;
-
 `;
 
 type GridCellProps = {
@@ -295,6 +295,20 @@ const CreateHotel: React.FC = () => {
     handleSubmit,
     watch,
   } = methods;
+  const { currentUser } = useCurrentUser();
+
+  useEffect(() => {
+    if (currentUser && currentUser.email === 'johndoe@test.com') {
+      toast.error('Cannot register home with test user', {
+        duration: Infinity,
+        id: 'create-home-test-user',
+      });
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    return () => toast.dismiss('create-home-test-user');
+  }, []);
 
   const onSubmit: SubmitHandler<CreateHomeFormData> = async (data) => {
     setSubmitting(true);
@@ -733,9 +747,7 @@ const CreateHotel: React.FC = () => {
               />
             </GridCell>
             <GridCell $noteCell={true}>
-              <p>
-                Note: It may take upto 2 business days to verify your home.
-              </p>
+              <p>Note: It may take upto 2 business days to verify your home.</p>
             </GridCell>
           </GridLayout>
           <Button className="submit-button">Submit</Button>

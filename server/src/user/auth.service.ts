@@ -122,7 +122,7 @@ export class AuthService {
   }
 
   async handleForgetPassword(email: string) {
-    if (email === 'test@test.com') {
+    if (email === 'johndoe@test.com') {
       throw new BadRequestException('Cannot reset password for test account');
     }
     const queryRunner = this.dataSource.createQueryRunner();

@@ -53,7 +53,7 @@ export class HomeService {
   ) {}
 
   async verifyCreateHomeData(user: CurrentUserDto) {
-    if (user.email === 'test@test.com') {
+    if (user.email === 'johndoe@test.com') {
       throw new BadRequestException('Cannot register with test account');
     }
     const queryRunner = this.dataSource.createQueryRunner();

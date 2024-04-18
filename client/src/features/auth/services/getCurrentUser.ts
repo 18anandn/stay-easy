@@ -6,6 +6,7 @@ import { customFetch } from '../../../utils/customFetch';
 const CurrentUserSchema = z.union([
   z.object({
     id: z.string().uuid(),
+    email: z.string().email(),
     role: z.nativeEnum(UserRole),
   }),
   z.null(),
