@@ -37,14 +37,14 @@ export class BookingService {
     if (numDays < 1) {
       throw new BadRequestException('Invalid date range');
     }
-    if (numDays > 60) {
-      throw new BadRequestException('Max 60 days allowed');
+    if (numDays > 31) {
+      throw new BadRequestException('Max 31 days allowed');
     }
     if (!isUUID(homeId, 4)) {
       throw new NotFoundException(`No home with id: ${homeId}`);
     }
 
-    let maxBookings = 20;
+    let maxBookings = 10;
     if (user.email.endsWith('@test.com')) {
       maxBookings = 1000;
     }
