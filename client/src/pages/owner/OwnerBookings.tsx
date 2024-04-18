@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import ResponsivePagination from 'react-responsive-pagination';
+import 'react-responsive-pagination/themes/classic.css';
 
 import { useGetBookingList } from '../../features/owner/hooks/useGetBookingList';
 import { bookingFilterOptionList } from '../../features/owner/data/booking-filter-opton-list';
