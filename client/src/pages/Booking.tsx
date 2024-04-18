@@ -25,6 +25,7 @@ import { safeToUTCDate } from '../utils/dates/toUTCDate';
 import Spinner from '../components/loaders/Spinner';
 import { screenWidths } from '../providers/ScreenProvider';
 import { useTitle } from '../hooks/useTitle';
+import { TripSortEnum } from '../features/booking/enums/TripSort.enum';
 
 const StyledBooking = styled.div`
   padding: var(--padding-block, 20px) var(--padding-inline-large, 10%);
@@ -267,7 +268,12 @@ const Booking: React.FC = () => {
       },
       {
         onSuccess: () => {
-          navigate('/user/trips', { replace: true });
+          const bookingListParams = new URLSearchParams();
+          bookingListParams.set('sortBy', TripSortEnum.RECENT);
+          navigate(
+            { pathname: '/user/trips', search: bookingListParams.toString() },
+            { replace: true }
+          );
         },
         onError: (error) => {
           toast.error(error.message);
@@ -303,7 +309,9 @@ const Booking: React.FC = () => {
             </ul>
             <Button
               onClick={() => {
-                navigate(`/home/${homeId}?${searchParams.toString()}`);
+                navigate(`/home/${homeId}?${searchParams.toString()}`, {
+                  replace: true,
+                });
               }}
             >
               Change details

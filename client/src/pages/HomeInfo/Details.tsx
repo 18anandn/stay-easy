@@ -83,7 +83,7 @@ const Details: React.FC<DataProps> = ({ data }) => {
       document.location.search
     );
     if (!isValidInitialParams(searchParamsOnInitialLoad, data)) {
-      setSearchParams(new URLSearchParams());
+      setSearchParams(new URLSearchParams(), { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
