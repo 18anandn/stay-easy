@@ -12,6 +12,10 @@ const StyledInputCounter = styled.div`
     margin: 0;
   }
 
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
   /* input[type='number'] {
     -moz-appearance: textfield;
   } */
