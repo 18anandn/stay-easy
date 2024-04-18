@@ -224,7 +224,10 @@ const Booking: React.FC = () => {
       const searchParamsOnInitialLoad = new URLSearchParams(
         document.location.search
       );
-      if (!isValidInitialParams(searchParamsOnInitialLoad, data)) {
+      if (
+        !isValidInitialParams(searchParamsOnInitialLoad, data) ||
+        data.unavailable
+      ) {
         navigate(`/home/${data.id}`, { replace: true });
       }
     }

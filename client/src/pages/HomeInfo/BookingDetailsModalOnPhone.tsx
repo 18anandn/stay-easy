@@ -30,6 +30,10 @@ const StyledBookingPanel = styled.div`
     position: relative;
     top: -0.2rem;
   }
+
+  .unavailable {
+    color: red;
+  }
 `;
 
 type Props = {
@@ -44,7 +48,11 @@ const BookingDetailsModalOnPhone: React.FC<Props> = ({ children, data }) => {
     return (
       <>
         <StyledBookingPanel>
-          <Button onClick={() => setIsModalOpen(true)}>Book now</Button>
+          {data.unavailable ? (
+            <h2 className="unavailable">Unavailable!</h2>
+          ) : (
+            <Button onClick={() => setIsModalOpen(true)}>Book now</Button>
+          )}
           <p className="price">
             <span>{moneyFormatter(data.price)} night</span>
           </p>

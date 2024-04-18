@@ -8,8 +8,6 @@ export const useObserver = () => {
     const ref = containerRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
-        // console.log('in callback')
-        // console.log(entries)
         const [entry] = entries;
         setIsVisible(entry.isIntersecting);
       },

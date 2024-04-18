@@ -35,7 +35,11 @@ export const HomeDetailsSchema = z.object({
   maxDate: z.date({ coerce: true }).transform((val) => toUTCDate(val)),
 });
 
-export type HomeDetails = Omit<z.infer<typeof HomeDetailsSchema>, 'time_zone'> & {
+export type HomeDetails = Omit<
+  z.infer<typeof HomeDetailsSchema>,
+  'time_zone'
+> & {
+  unavailable: boolean;
   timezone_details: TimeZoneDetails;
   invalidCheckinDates: Date[];
 };

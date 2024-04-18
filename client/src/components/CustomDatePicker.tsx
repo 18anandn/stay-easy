@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { compareAsc } from 'date-fns';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { MouseEventHandler, useEffect, useState } from 'react';
@@ -321,7 +322,7 @@ type SelectedFieldType = 'check-in' | 'check-out' | undefined;
 type Props = {
   className?: string;
   initialDateRange?: DateRange;
-  minStartDate?: Date;
+  minStartDate: Date;
   maxStartDate?: Date;
   maxEndDate?: Date;
   maxRange?: number;
@@ -388,11 +389,23 @@ const CustomDatePicker: React.FC<Props> = ({
     }
   }, [normal]);
 
-  maxEndDate =
+  const fromDate =
+    dateRange?.from && compareAsc(dateRange.from, minStartDate) >= 0
+      ? dateRange.from
+      : !selectedField || selectedField === 'check-in'
+      ? minStartDate
+      : dateRange?.from;
+
+  const newMaxEndDate =
     maxEndDate ??
     (maxRange && dateRange && dateRange.from
       ? addDays(dateRange.from, maxRange)
       : undefined);
+
+  const toDate =
+    !selectedField || selectedField === 'check-in'
+      ? maxStartDate
+      : newMaxEndDate;
 
   const checkInClasses = classNames({
     'check-in': true,
@@ -497,10 +510,8 @@ const CustomDatePicker: React.FC<Props> = ({
             mode="range"
             selected={dateRange}
             numberOfMonths={screen === ScreenType.PHONE ? 1 : 2}
-            fromDate={
-              selectedField === 'check-in' ? minStartDate : dateRange?.from
-            }
-            toDate={selectedField === 'check-in' ? maxStartDate : maxEndDate}
+            fromDate={fromDate}
+            toDate={toDate}
             disabled={selectedField === 'check-in' ? disabledDates : undefined}
             styles={{
               caption_label: {

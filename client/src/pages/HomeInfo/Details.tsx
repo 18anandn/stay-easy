@@ -22,10 +22,10 @@ import { safeToUTCDate } from '../../utils/dates/toUTCDate';
 
 const StyledDetails = styled.div`
   .sticky-box {
-    box-sizing: border-box;
     /* width: 100%; */
     /* padding: 2rem 2rem; */
     padding: 20px 30px;
+    width: 18rem;
     position: sticky;
     top: calc(var(--top-navbar-height) + 10px);
     display: flex;
@@ -43,7 +43,6 @@ const StyledDetails = styled.div`
   }
 
   .custom-date-picker {
-    width: 18rem;
     margin: auto;
   }
 
@@ -62,6 +61,10 @@ const StyledDetails = styled.div`
 
   .booking-button {
     width: 100%;
+  }
+
+  .unavailable {
+    color: red;
   }
 
   @media (max-width: ${screenWidths.phone}px) {
@@ -117,91 +120,97 @@ const Details: React.FC<DataProps> = ({ data }) => {
         <p className="night-price">
           <span>{moneyFormatter(data.price)}</span> night
         </p>
-        <div className="date-selector">
-          <CustomDatePicker
-            pickerPosition="left"
-            initialDateRange={{
-              from: start_date,
-              to: end_date,
-            }}
-            minStartDate={data.minDate}
-            maxStartDate={data.maxDate}
-            maxEndDate={maxCheckOutDate}
-            disabledDates={data.invalidCheckinDates}
-            onDateRangeChange={(dateRange) => {
-              if (!dateRange || !dateRange.from) {
-                searchParams.delete(CHECK_IN);
-                searchParams.delete(CHECK_OUT);
-              } else {
-                if (dateRange.from) {
-                  searchParams.set(
-                    CHECK_IN,
-                    format(dateRange.from, DATE_FORMAT_NUM)
-                  );
-                }
-                if (dateRange.to) {
-                  searchParams.set(
-                    CHECK_OUT,
-                    format(dateRange.to, DATE_FORMAT_NUM)
-                  );
-                } else {
-                  searchParams.delete(CHECK_OUT);
-                }
-              }
-              setSearchParams(searchParams, { replace: true });
-            }}
-          />
-        </div>
-        {data.timezone_details.diff !== 0 && (
-          <p>
-            Your timezone ({data.timezone_details.local}) is{' '}
-            {data.timezone_details.diff > 0 ? 'ahead' : 'behind'} of the home's
-            timezone ({data.timezone_details.other}) by{' '}
-            {data.timezone_details.formatted} hours.
-          </p>
-        )}
-        {start_date && end_date && (
+        {data.unavailable ? (
+          <h2 className="unavailable">Unavailable!</h2>
+        ) : (
           <>
-            <div className="guests">
-              <label htmlFor="guests">Guests</label>
-              <InputCounter
-                name="guests"
-                min={1}
-                max={data.cabin_capacity}
-                value={guests}
-                onValChange={(val) => {
-                  searchParams.set(GUESTS, val.toString());
+            <div className="date-selector">
+              <CustomDatePicker
+                pickerPosition="left"
+                initialDateRange={{
+                  from: start_date,
+                  to: end_date,
+                }}
+                minStartDate={data.minDate}
+                maxStartDate={data.maxDate}
+                maxEndDate={maxCheckOutDate}
+                disabledDates={data.invalidCheckinDates}
+                onDateRangeChange={(dateRange) => {
+                  if (!dateRange || !dateRange.from) {
+                    searchParams.delete(CHECK_IN);
+                    searchParams.delete(CHECK_OUT);
+                  } else {
+                    if (dateRange.from) {
+                      searchParams.set(
+                        CHECK_IN,
+                        format(dateRange.from, DATE_FORMAT_NUM)
+                      );
+                    }
+                    if (dateRange.to) {
+                      searchParams.set(
+                        CHECK_OUT,
+                        format(dateRange.to, DATE_FORMAT_NUM)
+                      );
+                    } else {
+                      searchParams.delete(CHECK_OUT);
+                    }
+                  }
                   setSearchParams(searchParams, { replace: true });
                 }}
               />
             </div>
-            <p className="total-price">
-              Total before taxes: {moneyFormatter(price)}
-            </p>
-            <Button
-              className="booking-button"
-              onClick={() => {
-                const bookingParams = new URLSearchParams();
-                if (start_date && end_date) {
-                  bookingParams.set(
-                    CHECK_IN,
-                    format(start_date, DATE_FORMAT_NUM)
-                  );
-                  bookingParams.set(
-                    CHECK_OUT,
-                    format(end_date, DATE_FORMAT_NUM)
-                  );
-                  bookingParams.set(GUESTS, guests.toString());
-                  const bookingURL = `/book/${
-                    data.id
-                  }?${bookingParams.toString()}`;
-                  navigate(bookingURL);
-                }
-              }}
-            >
-              Book now
-            </Button>
-            <p>You won't be charged yet</p>
+            {data.timezone_details.diff !== 0 && (
+              <p>
+                Your timezone ({data.timezone_details.local}) is{' '}
+                {data.timezone_details.diff > 0 ? 'ahead' : 'behind'} of the
+                home's timezone ({data.timezone_details.other}) by{' '}
+                {data.timezone_details.formatted} hours.
+              </p>
+            )}
+            {start_date && end_date && (
+              <>
+                <div className="guests">
+                  <label htmlFor="guests">Guests</label>
+                  <InputCounter
+                    name="guests"
+                    min={1}
+                    max={data.cabin_capacity}
+                    value={guests}
+                    onValChange={(val) => {
+                      searchParams.set(GUESTS, val.toString());
+                      setSearchParams(searchParams, { replace: true });
+                    }}
+                  />
+                </div>
+                <p className="total-price">
+                  Total before taxes: {moneyFormatter(price)}
+                </p>
+                <Button
+                  className="booking-button"
+                  onClick={() => {
+                    const bookingParams = new URLSearchParams();
+                    if (start_date && end_date) {
+                      bookingParams.set(
+                        CHECK_IN,
+                        format(start_date, DATE_FORMAT_NUM)
+                      );
+                      bookingParams.set(
+                        CHECK_OUT,
+                        format(end_date, DATE_FORMAT_NUM)
+                      );
+                      bookingParams.set(GUESTS, guests.toString());
+                      const bookingURL = `/book/${
+                        data.id
+                      }?${bookingParams.toString()}`;
+                      navigate(bookingURL);
+                    }
+                  }}
+                >
+                  Book now
+                </Button>
+                <p>You won't be charged yet</p>
+              </>
+            )}
           </>
         )}
       </div>

@@ -9,9 +9,6 @@ const useGetHome = (homeId: string | undefined) => {
       if (!homeId) throw new Exception('Invalid home requested', 400);
       return getHomeDetails(homeId);
     },
-    // onError: (err) => {
-    //   console.log(err);
-    // },
     staleTime: Infinity,
   });
 

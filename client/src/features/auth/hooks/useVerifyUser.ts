@@ -11,7 +11,6 @@ export const useVerifyUser = (
     ...options,
     queryKey: ['verify-user', userId, token],
     queryFn: () => {
-      console.log('here here');
       if (!userId || !token) {
         throw new Exception('Invalid verification attempt', 400);
       }
