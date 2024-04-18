@@ -7,8 +7,14 @@ export const zodExtendPasswordSchema = <T extends z.ZodRawShape>(
 ) => {
   return schema
     .merge(PasswordSchema)
+    .refine(
+      (data) =>
+        data.password &&
+        /^[a-zA-Z0-9!@#$%^&*()_+{}[\]:;<>,.?/~\-=|\\]+$/.test(data.password),
+      { message: 'Invalid characters used for password', path: ['password'] }
+    )
     .refine((data) => data.password === data.confirm_password, {
       message: ConfirmPassWordMatch,
       path: ['confirm_password'],
-    });;
+    });
 };

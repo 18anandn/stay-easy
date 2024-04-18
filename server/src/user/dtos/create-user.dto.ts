@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Matches,
   MaxLength,
 } from 'class-validator';
 
@@ -26,6 +27,9 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty({ message: 'Password cannot be empty' })
   @Length(4, 20, { message: 'Password should be 4-20 characters long' })
+  @Matches(/^[a-zA-Z0-9!@#$%^&*()_+{}[\]:;<>,.?/~\-=|\\]+$/, {
+    message: 'Invalid characters used in password',
+  })
   password!: string;
 
   @IsString()
