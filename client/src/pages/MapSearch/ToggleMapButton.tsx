@@ -1,9 +1,14 @@
 import styled from 'styled-components';
 import Button from '../../components/buttons/Button';
 import { useToggleMap } from './hooks/useToggleMap';
-import { screenWidths } from '../../providers/ScreenProvider';
+import {
+  ScreenType,
+  screenWidths,
+  useScreen,
+} from '../../providers/ScreenProvider';
 import { useGetMapOpenStatus } from './hooks/useMapOpenStatus';
 import { useEffect, useRef } from 'react';
+import { useSearchHomeList } from '../../features/homes/hooks/useSearchHomeList';
 
 const StyledToggleButton = styled(Button)`
   display: none;
@@ -27,7 +32,21 @@ const StyledToggleButton = styled(Button)`
 const ToggleMapButton: React.FC = () => {
   const [isToggleMapOpen, setIsToggleMapOpen] = useToggleMap();
   const isMapOpen = useGetMapOpenStatus();
+  const { data } = useSearchHomeList();
   const scrollPosRef = useRef(0);
+  const screen = useScreen();
+
+  useEffect(() => {
+    scrollPosRef.current = 0;
+  }, [data]);
+
+  useEffect(() => {
+    if (screen === ScreenType.DESKTOP) {
+      setIsToggleMapOpen(true);
+    } else {
+      setIsToggleMapOpen(false);
+    }
+  }, [screen, setIsToggleMapOpen]);
 
   useEffect(() => {
     if (!isToggleMapOpen) {
@@ -40,7 +59,6 @@ const ToggleMapButton: React.FC = () => {
       onClick={() => {
         if (!isToggleMapOpen) {
           scrollPosRef.current = window.scrollY;
-          window.scrollTo(0, 0);
         }
         setIsToggleMapOpen((prev) => !prev);
       }}

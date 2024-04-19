@@ -11,13 +11,16 @@ import { screenWidths } from '../../providers/ScreenProvider';
 import { useToggleMapValue } from './hooks/useToggleMap';
 import DotLoader from '../../components/loaders/DotLoader';
 import { MapWithTile, PriceMarker, SetBounds } from '../../map/CustomMap';
+import toast from 'react-hot-toast';
 
 const StyledMapContainer = styled.div`
   flex: 1 0 500px;
   /* height: 100; */
   position: sticky;
   top: calc(var(--top-navbar-height) + var(--form-container-height));
-  height: calc(100vh - var(--top-navbar-height) - var(--form-container-height));
+  height: calc(
+    100dvh - var(--top-navbar-height) - var(--form-container-height)
+  );
 
   .custom-dot-loader {
     position: absolute;
@@ -66,29 +69,18 @@ const StyledMapContainer = styled.div`
     flex: 0 0 auto;
     width: 100%;
     height: calc(
-      100svh - (var(--top-navbar-height) + var(--form-container-height))
+      100dvh - (var(--top-navbar-height) + var(--form-container-height))
     );
-    position: absolute;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    z-index: -1;
-    pointer-events: none;
-
-    &.map-close {
-      display: block;
-    }
+    display: none;
 
     &.open {
-      z-index: 2;
-      opacity: 1;
-      pointer-events: auto;
+      display: block;
     }
   }
 `;
 
 const MapDisplay: React.FC = () => {
-  const { data, isError, currentParams, setSearchParams, isLoading } =
+  const { data, isError, currentParams, setSearchParams, isLoading, error } =
     useSearchHomeList();
   const isMapOpen = useGetMapOpenStatus();
   const allowDragRefreshRef = useRef(false);
@@ -99,6 +91,12 @@ const MapDisplay: React.FC = () => {
       window.scrollTo(0, 0);
     }
   }, [isToggleMapOpen]);
+
+  useEffect(() => {
+    if (isError && isToggleMapOpen) {
+      toast.error(error?.message ?? 'There was an unknown server error');
+    }
+  }, [isError, error, isToggleMapOpen]);
 
   const mapClassNames = {
     'map-open': isMapOpen,
@@ -161,7 +159,7 @@ const MapDisplay: React.FC = () => {
           ))}
           <SetBounds
             // initialBounds={data?.bounds}
-            isDisplayed={isMapOpen}
+            isDisplayed={isMapOpen && isToggleMapOpen}
             yourBounds={
               // data && data.params.address.length > 0 ? data.bounds : undefined
               data?.bounds
