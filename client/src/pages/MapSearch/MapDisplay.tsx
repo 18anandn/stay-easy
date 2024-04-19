@@ -4,7 +4,7 @@ import { MapPopupProvider } from '../../map/MapPopupProvider';
 import { SearchHomeListParams } from '../../features/homes/types/SearchHomeListParams';
 import { toSearchHomeURLParams } from '../../features/homes/services/searchHome';
 import { useGetMapOpenStatus } from './hooks/useMapOpenStatus';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchHomeList } from '../../features/homes/hooks/useSearchHomeList';
 import styled from 'styled-components';
 import { screenWidths } from '../../providers/ScreenProvider';
@@ -93,6 +93,12 @@ const MapDisplay: React.FC = () => {
   const isMapOpen = useGetMapOpenStatus();
   const allowDragRefreshRef = useRef(false);
   const isToggleMapOpen = useToggleMapValue();
+
+  useEffect(() => {
+    if (isToggleMapOpen) {
+      window.scrollTo(0, 0);
+    }
+  }, [isToggleMapOpen]);
 
   const mapClassNames = {
     'map-open': isMapOpen,

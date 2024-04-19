@@ -5,6 +5,12 @@ import HomeList from './HomeList';
 import MapDisplay from './MapDisplay';
 import ToggleMapButton from './ToggleMapButton';
 import { useTitle } from '../../hooks/useTitle';
+import { ScopeProvider } from 'jotai-scope';
+import { filterModalAtom } from './hooks/useFiltersModalStatus';
+import { formModalAtom } from './hooks/useFormModalStatus';
+import { hoveredHomeAtom } from './hooks/useHoveredHome';
+import { mapOpenAtom } from './hooks/useMapOpenStatus';
+import { toggleMapAtom } from './hooks/useToggleMap';
 
 const StyledMapSearch = styled.div`
   --form-container-height: 4.3rem;
@@ -42,18 +48,27 @@ const StyledMapSearch = styled.div`
 `;
 
 const MapSearch: React.FC = () => {
-
-  useTitle('StayEasy | Search')
+  useTitle('StayEasy | Search');
 
   return (
-    <StyledMapSearch>
-      <SearchForm />
-      <div className="columns">
-        <HomeList />
-        <MapDisplay />
-      </div>
-      <ToggleMapButton />
-    </StyledMapSearch>
+    <ScopeProvider
+      atoms={[
+        filterModalAtom,
+        formModalAtom,
+        hoveredHomeAtom,
+        mapOpenAtom,
+        toggleMapAtom,
+      ]}
+    >
+      <StyledMapSearch>
+        <SearchForm />
+        <div className="columns">
+          <HomeList />
+          <MapDisplay />
+        </div>
+        <ToggleMapButton />
+      </StyledMapSearch>
+    </ScopeProvider>
   );
 };
 
