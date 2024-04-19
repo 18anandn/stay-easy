@@ -47,3 +47,11 @@ Many common front-end development patterns were following like lazy loading, inf
   2. Modal (using native HTML &lt;dialog&gt;)
   3. Carousel (scroll based)
   4. File selector
+
+## Tech Stack
+
+Typescript, NestJs, ReactJs, TypeORM, PostgreSQL, Nginx
+
+## Services
+
+AWS (EC2, RDS, Elasticache, S3, Cloudfront)
