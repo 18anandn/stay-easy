@@ -132,60 +132,70 @@ export class OwnerService {
     year: number,
     owner: CurrentUserDto,
   ): Promise<AnalyticsData> {
-    const date = new Date(year, 0, 1);
-    const start_date = format(startOfYear(date), DATE_FORMAT_NUM);
-    const end_date = format(endOfYear(date), DATE_FORMAT_NUM);
+    const cacheKey = ['owner-analytics', id, owner.id, year].join('-');
+    const cachedData: any = await this.cacheManager.get(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    } else {
+      const date = new Date(year, 0, 1);
+      const start_date = format(startOfYear(date), DATE_FORMAT_NUM);
+      const end_date = format(endOfYear(date), DATE_FORMAT_NUM);
 
-    const res: any[] = await this.homeRepository.query(
-      'SELECT * FROM get_month_booking_data($1::uuid, $2::uuid, $3::date, $4::date);',
-      [id, owner.id, start_date, end_date],
-    );
+      const res: any[] = await this.homeRepository.query(
+        'SELECT * FROM get_month_booking_data($1::uuid, $2::uuid, $3::date, $4::date);',
+        [id, owner.id, start_date, end_date],
+      );
 
-    if (!res || res.length === 0) {
-      throw new BadRequestException('No homes owned with the given id');
+      if (!res || res.length === 0) {
+        throw new BadRequestException('No homes owned with the given id');
+      }
+
+      const [data]: AnalyticsData[] = res;
+
+      const returnData = {
+        ...data,
+        month_data: data.month_data.map((val) => ({
+          ...val,
+          revenue: Number(((val.revenue * 95) / 100).toFixed(2)),
+          month: new Date(val.month),
+        })),
+        by_month_stats: {
+          ...data.by_month_stats,
+          revenue: {
+            min: Number(
+              ((data.by_month_stats.revenue.min * 95) / 100).toFixed(2),
+            ),
+            avg: Number(
+              ((data.by_month_stats.revenue.avg * 95) / 100).toFixed(2),
+            ),
+            max: Number(
+              ((data.by_month_stats.revenue.max * 95) / 100).toFixed(2),
+            ),
+          },
+        },
+        by_booking_stats: {
+          ...data.by_booking_stats,
+          revenue: {
+            min: Number(
+              ((data.by_booking_stats.revenue.min * 95) / 100).toFixed(2),
+            ),
+            avg: Number(
+              ((data.by_booking_stats.revenue.avg * 95) / 100).toFixed(2),
+            ),
+            max: Number(
+              ((data.by_booking_stats.revenue.max * 95) / 100).toFixed(2),
+            ),
+            total: Number(
+              ((data.by_booking_stats.revenue.total * 95) / 100).toFixed(2),
+            ),
+          },
+        },
+      };
+
+      await this.cacheManager.set(cacheKey, returnData, 60000);
+
+      return returnData;
     }
-
-    const [data]: AnalyticsData[] = res;
-
-    return {
-      ...data,
-      month_data: data.month_data.map((val) => ({
-        ...val,
-        revenue: Number(((val.revenue * 95) / 100).toFixed(2)),
-        month: new Date(val.month),
-      })),
-      by_month_stats: {
-        ...data.by_month_stats,
-        revenue: {
-          min: Number(
-            ((data.by_month_stats.revenue.min * 95) / 100).toFixed(2),
-          ),
-          avg: Number(
-            ((data.by_month_stats.revenue.avg * 95) / 100).toFixed(2),
-          ),
-          max: Number(
-            ((data.by_month_stats.revenue.max * 95) / 100).toFixed(2),
-          ),
-        },
-      },
-      by_booking_stats: {
-        ...data.by_booking_stats,
-        revenue: {
-          min: Number(
-            ((data.by_booking_stats.revenue.min * 95) / 100).toFixed(2),
-          ),
-          avg: Number(
-            ((data.by_booking_stats.revenue.avg * 95) / 100).toFixed(2),
-          ),
-          max: Number(
-            ((data.by_booking_stats.revenue.max * 95) / 100).toFixed(2),
-          ),
-          total: Number(
-            ((data.by_booking_stats.revenue.total * 95) / 100).toFixed(2),
-          ),
-        },
-      },
-    };
   }
 
   async getBookingList(
