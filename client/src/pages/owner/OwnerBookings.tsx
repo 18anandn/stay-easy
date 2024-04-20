@@ -345,6 +345,7 @@ const OwnerBookings: React.FC = () => {
                   onPageChange={(page) => {
                     searchParams.set('page', page.toString());
                     setSearchParams(searchParams);
+                    window.scrollTo(0, 0);
                   }}
                 />
               </div>
