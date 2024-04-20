@@ -2,6 +2,8 @@
 
 [Link to website](https://stayeasy.site)
 
+StayEasy.site is a website for booking homes or rooms. Users can book for accommodation and home/hotel owners can register and see analytics about their home/hotel.
+
 Note: This is a hobby project for showcasing full stack development for solving real world problems efficiently. Except the domain name, all the resources used are free.
 
 ## Features implemented
