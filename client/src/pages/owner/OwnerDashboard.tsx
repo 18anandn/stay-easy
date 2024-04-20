@@ -7,9 +7,9 @@ import CustomImageCarousel from '../../components/CustomImageCarousel';
 import { moneyFormatter } from '../../utils/money-formatter';
 import { screenWidths } from '../../providers/ScreenProvider';
 import { getFormattedLocation } from '../../utils/location/format-location';
-import { DefaultMarker, MapWithTile } from '../../map/CustomMap';
 import { useTitle } from '../../hooks/useTitle';
 import { useHomeName } from '../../features/owner/providers/HomeProvider';
+import LazyMapWithMarker from '../../map/CustomMap/LazyMapWithMarker';
 
 const StyledOwnerDashboard = styled.div`
   h2 {
@@ -149,14 +149,7 @@ const OwnerDashboard: React.FC = () => {
             </div>
             <div className="map">
               <h3>Location</h3>
-              <MapWithTile
-                id="map"
-                center={data.location}
-                zoom={13}
-                scrollWheelZoom={false}
-              >
-                <DefaultMarker position={data.location} />
-              </MapWithTile>
+              <LazyMapWithMarker location={data.location} />
             </div>
             {data.amenities && data.amenities.length !== 0 && (
               <div className="amenities">

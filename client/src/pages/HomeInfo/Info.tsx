@@ -2,8 +2,8 @@ import { getFormattedLocation } from '../../utils/location/format-location';
 import ImageViewer from './ImageViewer';
 import { DataProps } from './types/DataProps';
 import Description from './Description';
-import { DefaultMarker, MapWithTile } from '../../map/CustomMap';
 import { useTitle } from '../../hooks/useTitle';
+import LazyMapWithMarker from '../../map/CustomMap/LazyMapWithMarker';
 
 const Info: React.FC<DataProps> = ({ data }) => {
   useTitle(data.name);
@@ -28,14 +28,7 @@ const Info: React.FC<DataProps> = ({ data }) => {
         <div className="map">
           <h2>Location</h2>
           <div className="map-container">
-            <MapWithTile
-              id="map"
-              center={data.location}
-              zoom={13}
-              scrollWheelZoom={false}
-            >
-              <DefaultMarker position={data.location} />
-            </MapWithTile>
+            <LazyMapWithMarker location={data.location} />
           </div>
         </div>
       </div>

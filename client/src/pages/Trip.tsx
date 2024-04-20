@@ -10,8 +10,8 @@ import { format } from 'date-fns';
 import { moneyFormatter } from '../utils/money-formatter';
 import { DATE_FORMAT_TEXT } from '../data/constants';
 import { screenWidths } from '../providers/ScreenProvider';
-import { DefaultMarker, MapWithTile } from '../map/CustomMap';
 import { useTitle } from '../hooks/useTitle';
+import LazyMapWithMarker from '../map/CustomMap/LazyMapWithMarker';
 
 const StyledTrip = styled.div`
   padding-left: 5%;
@@ -201,14 +201,7 @@ const Trip: React.FC = () => {
             </table>
           </div>
           <div className="right-column">
-            <MapWithTile
-              id="map"
-              center={data.home.location}
-              zoom={13}
-              scrollWheelZoom={false}
-            >
-              <DefaultMarker position={data.home.location} />
-            </MapWithTile>
+            <LazyMapWithMarker location={data.home.location} />
           </div>
         </div>
       ) : (

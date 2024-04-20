@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import Spinner from '../../components/loaders/Spinner';
 import ErrorPage from '../ErrorPage';
 import CustomImageCarousel from '../../components/CustomImageCarousel';
-import { MapContainer, Marker, TileLayer } from 'react-leaflet';
+import LazyMapWithMarker from '../../map/CustomMap/LazyMapWithMarker';
 
 const StyledOwnerHomeDetails = styled.div`
   padding: 25px 8%;
@@ -125,18 +125,7 @@ const OwnerHomeDetails: React.FC = () => {
             </div>
             <div className="map">
               <h3>Location</h3>
-              <MapContainer
-                id="map"
-                center={data.location}
-                zoom={13}
-                scrollWheelZoom={false}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
-                />
-                <Marker position={data.location} />
-              </MapContainer>
+              <LazyMapWithMarker location={data.location} />
             </div>
             {data.amenities && data.amenities.length !== 0 && (
               <div className="amenities">
