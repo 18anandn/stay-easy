@@ -8,20 +8,13 @@ import {
 } from 'recharts';
 import styled from 'styled-components';
 import { useMemo } from 'react';
-import { Stats } from '../../features/owner/types/Stats';
+import { CustomBarChartProps } from '../types/CustomBarChartProps';
 
 const StyledCustomBarChart = styled.div`
   height: 400px;
 `;
 
-type Props = {
-  stats: Stats;
-  // y_axis_label: string;
-  tool_tip_label: string;
-  tickFormatter?: (value: any, index: number) => string;
-};
-
-const CustomBarChart: React.FC<Props> = ({
+const CustomBarChart: React.FC<CustomBarChartProps> = ({
   stats,
   // y_axis_label,
   tool_tip_label,

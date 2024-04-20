@@ -10,26 +10,13 @@ import {
   Tooltip,
 } from 'recharts';
 import styled from 'styled-components';
-import { Stats } from '../../features/owner/types/Stats';
+import { CustomeLineChartProps } from '../types/CustomeLineChartProps';
 
 const StyledCustomLineChart = styled.div`
   height: 400px;
 `;
 
-type Props = {
-  data: {
-    months: {
-      month: string;
-      property: number;
-    }[];
-    stats: Stats;
-  };
-  y_axis_label: string;
-  tool_tip_label: string;
-  tickFormatter?: (value: any, index: number) => string;
-};
-
-const CustomLineChart: React.FC<Props> = ({
+const CustomLineChart: React.FC<CustomeLineChartProps> = ({
   data,
   y_axis_label,
   tool_tip_label,
