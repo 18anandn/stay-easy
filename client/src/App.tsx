@@ -7,7 +7,7 @@ import {
 import styled from 'styled-components';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { lazy } from 'react';
+import { lazy, useEffect, useState } from 'react';
 
 import GlobalStyles from './GlobalStyles';
 import AppLayout from './layouts/AppLayout';
@@ -36,47 +36,61 @@ const queryClient = new QueryClient({
   },
 });
 
-function App() {
-  const subdomain = getSubdomain();
-  let displayRoute = Main;
-  // let displayRoute = Owner;
-  // let displayRoute = Admin;
-  // let displayRoute = AuthWithBaseUrl;
-  switch (subdomain) {
-    case Subdomain.ADMIN:
-      displayRoute = Admin;
-      break;
-    case Subdomain.OWNER:
-      displayRoute = Owner;
-      break;
-    case Subdomain.AUTH:
-      displayRoute = AuthWithBaseUrl;
-      break;
-    default:
-      displayRoute = Main;
-  }
-  const router = createBrowserRouter(
-    createRoutesFromElements(
-      <>
-        <Route element={<AppLayout />}>
-          <Route
-            errorElement={
-              <ErrorPageWithPadding
-                error={
-                  new Exception('There was an unknown application error.', -1)
-                }
-              />
-            }
-          >
-            {displayRoute}
-            <Route path="*" element={<NotFoundPage />} />
-            <Route path="privacy" element={<Privacy />} />
-            <Route path="terms" element={<Terms />} />
-          </Route>
+const subdomain = getSubdomain();
+let displayRoute = Main;
+// let displayRoute = Owner;
+// let displayRoute = Admin;
+// let displayRoute = AuthWithBaseUrl;
+switch (subdomain) {
+  case Subdomain.ADMIN:
+    displayRoute = Admin;
+    break;
+  case Subdomain.OWNER:
+    displayRoute = Owner;
+    break;
+  case Subdomain.AUTH:
+    displayRoute = AuthWithBaseUrl;
+    break;
+  default:
+    displayRoute = Main;
+}
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <>
+      <Route element={<AppLayout />}>
+        <Route
+          errorElement={
+            <ErrorPageWithPadding
+              error={
+                new Exception('There was an unknown application error.', -1)
+              }
+            />
+          }
+        >
+          {displayRoute}
+          <Route path="*" element={<NotFoundPage />} />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="terms" element={<Terms />} />
         </Route>
-      </>
-    )
-  );
+      </Route>
+    </>
+  )
+);
+
+function App() {
+  const [isAppLoading, setIsAppLoading] = useState(true);
+
+  useEffect(() => {
+    window.setTimeout(() => {
+      document.querySelector('#global-loader')?.remove();
+      setIsAppLoading(false);
+    }, 700);
+  }, []);
+
+  if (isAppLoading) {
+    return null;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
