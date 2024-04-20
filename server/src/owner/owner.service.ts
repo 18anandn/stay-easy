@@ -84,7 +84,7 @@ export class OwnerService {
         throw new BadRequestException('No homes owned with the given id');
       }
       [data] = res;
-      this.cacheManager.set(key, data, 60000);
+      await this.cacheManager.set(key, data, 60000);
     }
 
     delete data.id;
