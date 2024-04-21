@@ -138,7 +138,7 @@ export class AppModule implements NestModule {
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(delayer(2000)).forRoutes('*');
+    // consumer.apply(delayer(2000)).forRoutes('*');
     // consumer
     //   .apply(
     //     express.static(join(process.cwd(), 'front-end'), {
