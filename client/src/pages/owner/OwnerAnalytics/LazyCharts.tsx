@@ -12,7 +12,6 @@ const StyledLazyCharts = styled.div`
     margin: auto;
     height: min-content;
     font-size: 0.7px;
-    background-color: red;
     position: static;
   }
 `;

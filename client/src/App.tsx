@@ -33,24 +33,24 @@ const queryClient = new QueryClient({
   },
 });
 
-const subdomain = getSubdomain();
-let displayRoute = Main;
-// let displayRoute = Owner;
+// const subdomain = getSubdomain();
+// let displayRoute = Main;
+let displayRoute = Owner;
 // let displayRoute = Admin;
 // let displayRoute = AuthWithBaseUrl;
-switch (subdomain) {
-  case Subdomain.ADMIN:
-    displayRoute = Admin;
-    break;
-  case Subdomain.OWNER:
-    displayRoute = Owner;
-    break;
-  case Subdomain.AUTH:
-    displayRoute = AuthWithBaseUrl;
-    break;
-  default:
-    displayRoute = Main;
-}
+// switch (subdomain) {
+//   case Subdomain.ADMIN:
+//     displayRoute = Admin;
+//     break;
+//   case Subdomain.OWNER:
+//     displayRoute = Owner;
+//     break;
+//   case Subdomain.AUTH:
+//     displayRoute = AuthWithBaseUrl;
+//     break;
+//   default:
+//     displayRoute = Main;
+// }
 
 const router = createBrowserRouter(
   createRoutesFromElements(
