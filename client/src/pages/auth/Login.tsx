@@ -85,6 +85,11 @@ export const StyledLogin = styled.div`
   }
 `;
 
+const defaultCreds = {
+  email: 'johndoe@test.com',
+  password: 'secret',
+};
+
 function Login() {
   const queryClient = useQueryClient();
   const { isLoggingIn, login } = useLoginUser();
@@ -100,7 +105,10 @@ function Login() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<Credentials>({ resolver: zodResolver(CredentialSchema) });
+  } = useForm<Credentials>({
+    defaultValues: defaultCreds,
+    resolver: zodResolver(CredentialSchema),
+  });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirectTo');
@@ -157,6 +165,19 @@ function Login() {
     }
   }, [isRefetchError, error]);
 
+  useEffect(() => {
+    if (!currentUser) {
+      toast.success(
+        'You can use the auto-filled credentials for seeing analytics of owned homes',
+        { id: 'test-account-note', duration: 5500 }
+      );
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    return () => toast.dismiss('test-account-note');
+  }, []);
+
   const onSubmit: SubmitHandler<Credentials> = (data) => {
     login(data, {
       onSuccess: (userData) => {
@@ -208,7 +229,6 @@ function Login() {
               <Input
                 type="text"
                 id="email"
-                defaultValue='johndoe@test.com'
                 disabled={isBeingLoggedIn}
                 {...register('email')}
               />
@@ -224,7 +244,6 @@ function Login() {
               <Input
                 type="password"
                 id="password"
-                defaultValue='secret'
                 disabled={isBeingLoggedIn}
                 {...register('password')}
               />
