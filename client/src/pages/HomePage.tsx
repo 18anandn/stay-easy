@@ -43,7 +43,7 @@ const StyledHome = styled.div`
     padding: 10% 2rem;
     grid-template-columns: unset;
     grid-template-rows: 1fr 500px;
-    
+
     .left-column {
       ul {
         margin-inline: auto;
@@ -87,7 +87,9 @@ const HomePage: React.FC = () => {
             (currentUser.role === UserRole.OWNER ||
               currentUser.role === UserRole.ADMIN) && (
               <li>
-                <Link to="/owner">Your homes</Link>
+                <Link to="/owner" target="_blank">
+                  Your homes
+                </Link>
               </li>
             )}
         </ul>
