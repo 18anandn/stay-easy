@@ -1,11 +1,31 @@
 import styled from 'styled-components';
 import { screenWidths } from '../providers/ScreenProvider';
+import { Link } from 'react-router-dom';
+import { useCurrentUser } from '../features/auth/hooks/useCurrentUser';
+import { UserRole } from '../features/auth/enums/UserRole.enum';
 
 const StyledHome = styled.div`
   padding: 2rem 5%;
   display: grid;
   grid-template-columns: 1fr 600px;
   align-items: center;
+
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    ul {
+      display: flex;
+      gap: 1rem;
+      list-style-type: none;
+    }
+
+    a {
+      color: black;
+      font-size: 1.3rem;
+    }
+  }
 
   h1 {
     font-size: 2.5rem;
@@ -23,6 +43,12 @@ const StyledHome = styled.div`
     padding: 10% 2rem;
     grid-template-columns: unset;
     grid-template-rows: 1fr 500px;
+    
+    .left-column {
+      ul {
+        margin-inline: auto;
+      }
+    }
 
     h1 {
       font-size: 3rem;
@@ -44,13 +70,28 @@ const StyledHome = styled.div`
 `;
 
 const HomePage: React.FC = () => {
+  const { currentUser } = useCurrentUser();
   return (
     <StyledHome>
-      <h1>
-        Book homes, rooms, hostels.
-        <br />
-        Anytime! Anywhere!
-      </h1>
+      <div className="left-column">
+        <h1>
+          Book homes, rooms, hostels.
+          <br />
+          Anytime! Anywhere!
+        </h1>
+        <ul>
+          <li>
+            <Link to="/search">Explore now</Link>
+          </li>
+          {currentUser &&
+            (currentUser.role === UserRole.OWNER ||
+              currentUser.role === UserRole.ADMIN) && (
+              <li>
+                <Link to="/owner">Your homes</Link>
+              </li>
+            )}
+        </ul>
+      </div>
       <img
         className="home-image"
         src="https://i.imgur.com/oFpPUF9.png"
