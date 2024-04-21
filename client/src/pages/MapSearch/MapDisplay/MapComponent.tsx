@@ -65,7 +65,6 @@ const MapComponent: React.FC = () => {
           [-90, -180],
           [90, 180],
         ]}
-        // worldCopyJump={true}
       >
         <MarkerCss />
         {data?.homes.map((home) => (
@@ -77,12 +76,11 @@ const MapComponent: React.FC = () => {
           />
         ))}
         <SetBounds
-          // initialBounds={data?.bounds}
           isDisplayed={isMapOpen && isToggleMapOpen}
           yourBounds={
-            // data && data.params.address.length > 0 ? data.bounds : undefined
             data?.bounds
           }
+          disableInteraction={isLoading}
           onBoundsChange={(bounds) => {
             if (allowDragRefreshRef.current) {
               const newParams: SearchHomeListParams = {

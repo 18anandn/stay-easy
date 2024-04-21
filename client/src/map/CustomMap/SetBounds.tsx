@@ -8,12 +8,14 @@ type Props = {
   isDisplayed: boolean;
   yourBounds?: LatLngBoundsLiteral;
   onBoundsChange?: (bounds: LatLngBounds) => void;
+  disableInteraction: boolean;
 };
 
 const SetBounds: React.FC<Props> = ({
   isDisplayed,
   yourBounds,
   onBoundsChange,
+  disableInteraction,
 }) => {
   const mapIsHiddenRef = useRef<boolean>(isDisplayed);
   const allowMoveEndTrigger = useRef<boolean>(false);
@@ -121,6 +123,14 @@ const SetBounds: React.FC<Props> = ({
       map.invalidateSize();
     }
   }, [map, isDisplayed]);
+
+  useEffect(() => {
+    if(disableInteraction) {
+      map.getContainer().style.pointerEvents = 'none';
+    } else {
+      map.getContainer().style.pointerEvents = 'auto';
+    }
+  }, [map, disableInteraction])
 
   useEffect(() => {
     // if (mapIsHiddenRef.current) {
