@@ -26,7 +26,7 @@ const LogoutButton: React.FC<Props> = () => {
     logout(undefined, {
       onSuccess: () => {
         toast.success('Logged out successfully');
-        queryClient.clear();
+        queryClient.resetQueries();
         navigate('/', { replace: true });
       },
       onError: (error) => {
