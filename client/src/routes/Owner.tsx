@@ -8,6 +8,10 @@ import OwnerBookings from '../pages/owner/OwnerBookings';
 import { HomeProvider } from '../features/owner/providers/HomeProvider';
 import OwnerHomeDetails from '../pages/owner/OwnerHomeDetails';
 import OwnerBaseLayout from '../layouts/owner/OwnerBaseLayout';
+import { lazy } from 'react';
+
+const Privacy = lazy(() => import('../pages/Privacy'));
+const Terms = lazy(() => import('../pages/Terms'));
 
 const Owner = (
   <Route path="/" element={<OwnerAppLayout />}>
@@ -17,6 +21,8 @@ const Owner = (
         <Route index element={<Navigate to="/" replace />} />
         <Route path=":homeId" element={<OwnerHomeDetails />} />
       </Route>
+      <Route path="privacy" element={<Privacy />} />
+      <Route path="terms" element={<Terms />} />
     </Route>
     <Route
       path=":ownerHomeId"

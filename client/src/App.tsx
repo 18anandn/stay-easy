@@ -7,7 +7,7 @@ import {
 import styled from 'styled-components';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { lazy, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import GlobalStyles from './GlobalStyles';
 import AppLayout from './layouts/AppLayout';
@@ -19,9 +19,6 @@ import { AuthWithBaseUrl } from './routes/AuthWithBaseUrl';
 import NotFoundPage from './pages/NotFoundPage';
 import { Exception } from './data/Exception';
 import ErrorPageWithPadding from './pages/ErrorPageWithPadding';
-
-const Privacy = lazy(() => import('./pages/Privacy'));
-const Terms = lazy(() => import('./pages/Terms'));
 
 const StyledApp = styled.div``;
 
@@ -70,8 +67,6 @@ const router = createBrowserRouter(
         >
           {displayRoute}
           <Route path="*" element={<NotFoundPage />} />
-          <Route path="privacy" element={<Privacy />} />
-          <Route path="terms" element={<Terms />} />
         </Route>
       </Route>
     </>

@@ -14,6 +14,8 @@ import { Auth } from './Auth';
 import { lazy } from 'react';
 
 const CreateHotel = lazy(() => import('../pages/CreateHotel'));
+const Privacy = lazy(() => import('../pages/Privacy'));
+const Terms = lazy(() => import('../pages/Terms'));
 
 const MainRoute = (
   <Route path="/" element={<UserLayout />}>
@@ -38,6 +40,8 @@ const MainRoute = (
       <Route path="trip/:tripId" element={<Trip />} />
     </Route>
     <Route path="search" element={<MapSearch />} />
+    <Route path="privacy" element={<Privacy />} />
+    <Route path="terms" element={<Terms />} />
   </Route>
 );
 export default MainRoute;
