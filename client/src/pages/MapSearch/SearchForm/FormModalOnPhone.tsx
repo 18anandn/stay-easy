@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Modal from '../../../components/Modal';
 import { ScreenType, useScreen } from '../../../providers/ScreenProvider';
-import { getFindHomeParams } from '../../../features/homes/services/searchHome';
 import { dateRangeFormatter } from '../../../utils/dates/date-range-formatter';
 import { useFormModalStatus } from '../hooks/useFormModalStatus';
+import { useSearchHomeList } from '../../../features/homes/hooks/useSearchHomeList';
 
 type Props = {
   children: React.ReactNode;
@@ -38,8 +37,7 @@ const StyledButton = styled.button`
 const FormModalOnPhone: React.FC<Props> = ({ children }) => {
   const screen = useScreen();
   const [isOpenModal, setIsOpenModal] = useFormModalStatus();
-  const [searchParams] = useSearchParams();
-  const currentParams = getFindHomeParams(searchParams);
+  const { currentParams, isLoading } = useSearchHomeList();
 
   useEffect(() => {
     if (screen !== ScreenType.PHONE) {
@@ -50,7 +48,11 @@ const FormModalOnPhone: React.FC<Props> = ({ children }) => {
   if (screen === ScreenType.PHONE) {
     return (
       <>
-        <StyledButton className="" onClick={() => setIsOpenModal(true)}>
+        <StyledButton
+          className=""
+          disabled={isLoading}
+          onClick={() => setIsOpenModal(true)}
+        >
           <span className="address">
             {currentParams.address ? currentParams.address : 'Enter address'}
           </span>

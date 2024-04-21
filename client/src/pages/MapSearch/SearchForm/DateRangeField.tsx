@@ -4,12 +4,14 @@ import { format, startOfDay, add, lastDayOfMonth } from 'date-fns';
 import { SearchHomeListParams } from '../../../features/homes/types/SearchHomeListParams';
 import CustomDatePicker from '../../../components/CustomDatePicker';
 import { DATE_FORMAT_NUM } from '../../../data/constants';
+import { useSearchHomeList } from '../../../features/homes/hooks/useSearchHomeList';
 
 const minDate = startOfDay(new Date());
 const maxDate = lastDayOfMonth(add(minDate, { years: 1, months: 1 }));
 
 const DateRangeField: React.FC = () => {
   const { control } = useFormContext<SearchHomeListParams>();
+  const { isLoading } = useSearchHomeList();
 
   return (
     <Controller
@@ -22,6 +24,7 @@ const DateRangeField: React.FC = () => {
             : undefined;
         return (
           <CustomDatePicker
+            disabled={isLoading}
             minStartDate={minDate}
             maxStartDate={maxDate}
             maxRange={60}

@@ -2,12 +2,10 @@ import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import SearchInput from '../../../components/inputs/SearchInput';
 import { SearchHomeListParams } from '../../../features/homes/types/SearchHomeListParams';
-import { useSearchParams } from 'react-router-dom';
-import { getFindHomeParams } from '../../../features/homes/services/searchHome';
+import { useSearchHomeList } from '../../../features/homes/hooks/useSearchHomeList';
 
 const SearchInputField: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const currentParams = getFindHomeParams(searchParams);
+  const { currentParams, isLoading } = useSearchHomeList();
   const { control } = useFormContext<SearchHomeListParams>();
 
   return (
@@ -29,6 +27,7 @@ const SearchInputField: React.FC = () => {
           name="address"
           autoComplete="on"
           value={field.value}
+          disabled={isLoading}
           onValChange={(value) => {
             field.onChange(value);
           }}

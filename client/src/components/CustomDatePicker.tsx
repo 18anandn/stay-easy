@@ -14,6 +14,11 @@ import {
 import classNames from 'classnames';
 
 const StyledCustomDatePicker = styled.div`
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   .dates {
     /* height: var(--height); */
     width: 100%;
@@ -330,6 +335,7 @@ type Props = {
   onSelectedFieldChange?: (field: SelectedFieldType) => void;
   onDateRangeChange: (dateRange: DateRange | undefined) => void;
   pickerPosition?: 'center' | 'left' | 'right' | 'normal';
+  disabled?: boolean;
 };
 
 const CustomDatePicker: React.FC<Props> = ({
@@ -343,6 +349,7 @@ const CustomDatePicker: React.FC<Props> = ({
   onDateRangeChange,
   className = 'custom-date-picker',
   pickerPosition = 'center',
+  disabled,
 }) => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     () => initialDateRange
@@ -407,6 +414,11 @@ const CustomDatePicker: React.FC<Props> = ({
       ? maxStartDate
       : newMaxEndDate;
 
+  const containerClasses = classNames(
+    { disabled: disabled === true },
+    className
+  );
+
   const checkInClasses = classNames({
     'check-in': true,
     selected: selectedField === 'check-in',
@@ -425,7 +437,7 @@ const CustomDatePicker: React.FC<Props> = ({
   });
 
   return (
-    <StyledCustomDatePicker className={className}>
+    <StyledCustomDatePicker className={containerClasses}>
       <div className="dates" onClick={openDatePicker}>
         <div className="date-fields">
           <div

@@ -132,7 +132,11 @@ const Filters: React.FC = () => {
 
   return (
     <>
-      <FilterButton type="button" onClick={() => setIsFiltersOpen(true)}>
+      <FilterButton
+        type="button"
+        disabled={isLoading}
+        onClick={() => setIsFiltersOpen(true)}
+      >
         <span className="icon">
           <RiEqualizerLine />
         </span>
